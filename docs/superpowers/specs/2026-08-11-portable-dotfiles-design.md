@@ -83,9 +83,10 @@ dotfiles/
 2. Topic path fragments.
 3. shared shell options, history, aliases, functions, and key bindings.
 4. completion initialization and fzf integration.
-5. zsh-autosuggestions.
-6. zsh-syntax-highlighting last, as required upstream.
+5. Powerlevel10k theme and prompt configuration.
+6. zsh-autosuggestions.
 7. optional `~/.zshrc.local` overrides.
+8. zsh-syntax-highlighting last, as required upstream.
 
 Interactive settings remain in `.zshrc`; the repository will not add `.zshenv` without a concrete non-interactive requirement because `.zshenv` runs for every Zsh invocation.
 
