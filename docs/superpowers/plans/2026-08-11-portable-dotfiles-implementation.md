@@ -25,6 +25,7 @@
 - Do not depend on GNU-only `readlink -f` or `realpath`; canonicalize paths with primitives available on stock macOS and Debian/Ubuntu.
 - Create temporary files with a `${TMPDIR:-/tmp}/dotfiles.XXXXXX` template that works on both supported platforms.
 - Use test-first cycles, fresh verification output, and one reviewable commit per task.
+- Apply strict TDD to executable shell behavior. Validate declarative configuration through its real consumer/parser when available, treat private-data scans as static lint, and review human documentation manually with link and command checks rather than source-text unit tests.
 - Under the repository's principal-engineer review directive, this plan specifies interfaces, tests, and acceptance criteria without supplying implementation bodies.
 
 ## Locked File Structure and Responsibilities
@@ -415,9 +416,9 @@
 - Kitty uses the `JetBrainsMono Nerd Font Mono` family, a neutral dark palette, platform-neutral shortcuts, visual bell behavior, and no absolute include paths or network references.
 - Powerlevel10k uses a compact two-line prompt with directory, Git VCS, prompt character, status, command duration, background jobs, and time; no user/host segment appears locally unless the shell is remote.
 
-- [ ] **Step 1: Write configuration contract cases**
+- [ ] **Step 1: Write consumer-level configuration contract cases**
 
-  Cover `git config --file` parsing, required Git values, absent identity/credential fields, correct local include, Kitty font and neutral paths, absence of URLs/usernames, Powerlevel10k parseability, required prompt segments, and manifest destination mappings.
+  Cover Git behavior through `git config --file`, Powerlevel10k behavior by sourcing it in isolated Zsh and inspecting the resulting prompt variables, and link behavior through the manifest consumer. Do not add source-text unit tests for declarative Kitty configuration; record manual review in the task report and validate it with Kitty's parser when Kitty is available.
 
 - [ ] **Step 2: Run the configuration suite and confirm failure**
 
@@ -458,9 +459,9 @@
 - CI runs on `ubuntu-latest` and `macos-latest`, installs ShellCheck and shfmt through each runner's package manager, and executes the same local verification commands.
 - Hygiene tests reject embedded absolute home paths, private-domain suffixes, identity fields, common secret formats, unresolved placeholders, broken relative Markdown links, and non-HTTPS remote URLs.
 
-- [ ] **Step 1: Write documentation and hygiene contract cases**
+- [ ] **Step 1: Write repository hygiene lint cases**
 
-  Verify every README command references a real file/flag, every documented feature maps to a manifest/config entry, internal Markdown links resolve, recovery instructions match backup behavior, and repository text is neutral.
+  Automate only repository-policy checks: internal Markdown links resolve, embedded absolute home paths/private-domain suffixes/common secret formats are rejected, non-HTTPS remote URLs are rejected, and unresolved template markers are rejected. Review README commands, feature claims, and recovery instructions manually against the public CLI and record that review in the task report rather than unit-testing prose.
 
 - [ ] **Step 2: Run hygiene checks and confirm failure**
 
