@@ -3,3 +3,6 @@
 .omx/
 .superpowers/
 .worktrees/
+*.swp
+*.tmp
+tmp/
