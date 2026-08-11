@@ -9,6 +9,23 @@ assert_fails() {
   fi
 }
 
+assert_fails_with_stderr() {
+  first_needle="$1"
+  second_needle="$2"
+  shift 2
+
+  stderr_file="${TEST_TMPDIR}/stderr"
+  if (
+    "$@"
+  ) >"${TEST_TMPDIR}/stdout" 2>"${stderr_file}"; then
+    fail "expected command to fail: $*"
+    return 1
+  fi
+
+  assert_contains "${stderr_file}" "${first_needle}" || return 1
+  assert_contains "${stderr_file}" "${second_needle}" || return 1
+}
+
 load_common() {
   if [ ! -f "${COMMON_SH}" ]; then
     fail "missing common helpers: ${COMMON_SH}"
@@ -36,6 +53,13 @@ collect_callback() {
 
 marker_callback() {
   printf 'called\n' >"${TEST_TMPDIR}/callback-marker"
+}
+
+make_manifest_repo() {
+  repo_root="${TEST_TMPDIR}/repo"
+  mkdir -p "${repo_root}/manifest" "${repo_root}/zsh" "${repo_root}/git" || return 1
+  printf 'zsh config\n' >"${repo_root}/zsh/zshrc.symlink" || return 1
+  printf 'git config\n' >"${repo_root}/git/gitconfig.symlink" || return 1
 }
 
 test_manifest_each_ignores_blank_lines_and_comments() {
@@ -75,11 +99,13 @@ test_manifest_each_requires_exact_field_counts_before_callback() {
 
 test_manifest_each_rejects_duplicate_destinations_and_names() {
   load_common || return 1
+  make_manifest_repo || return 1
+  links_manifest="${repo_root}/manifest/links.conf"
 
-  write_file "${TEST_TMPDIR}/links.conf" \
+  write_file "${links_manifest}" \
     'zsh/zshrc.symlink|.zshrc' \
     'git/gitconfig.symlink|.zshrc'
-  assert_fails manifest_each links "${TEST_TMPDIR}/links.conf" marker_callback
+  assert_fails_with_stderr "${links_manifest}:2:" "duplicate manifest key" manifest_each links "${links_manifest}" marker_callback || return 1
 
   write_file "${TEST_TMPDIR}/plugins.conf" \
     'powerlevel10k|https://github.com/romkatv/powerlevel10k.git|35833ea15f14b71dbcebc7e54c104d8d56ca5268|powerlevel10k.zsh-theme' \
@@ -89,6 +115,7 @@ test_manifest_each_rejects_duplicate_destinations_and_names() {
 
 test_manifest_each_rejects_hostile_link_paths_before_callback() {
   load_common || return 1
+  make_manifest_repo || return 1
 
   write_file "${TEST_TMPDIR}/missing-source.conf" 'missing/file|.zshrc'
   assert_fails manifest_each links "${TEST_TMPDIR}/missing-source.conf" marker_callback
@@ -96,12 +123,14 @@ test_manifest_each_rejects_hostile_link_paths_before_callback() {
   write_file "${TEST_TMPDIR}/absolute-source.conf" '/tmp/source|.zshrc'
   assert_fails manifest_each links "${TEST_TMPDIR}/absolute-source.conf" marker_callback
 
-  write_file "${TEST_TMPDIR}/traversal-dest.conf" 'zsh/zshrc.symlink|../.zshrc'
-  assert_fails manifest_each links "${TEST_TMPDIR}/traversal-dest.conf" marker_callback
+  traversal_manifest="${repo_root}/manifest/traversal-dest.conf"
+  write_file "${traversal_manifest}" 'zsh/zshrc.symlink|../.zshrc'
+  assert_fails_with_stderr "${traversal_manifest}:1:" "invalid home destination" manifest_each links "${traversal_manifest}" marker_callback || return 1
 
   tab_record="$(printf 'zsh/zshrc.symlink|bad\tname')"
-  write_file "${TEST_TMPDIR}/control-dest.conf" "${tab_record}"
-  assert_fails manifest_each links "${TEST_TMPDIR}/control-dest.conf" marker_callback
+  control_manifest="${repo_root}/manifest/control-dest.conf"
+  write_file "${control_manifest}" "${tab_record}"
+  assert_fails_with_stderr "${control_manifest}:1:" "control characters are not allowed" manifest_each links "${control_manifest}" marker_callback || return 1
 
   if [ -e "${TEST_TMPDIR}/callback-marker" ]; then
     fail "callback ran for a hostile link record"
