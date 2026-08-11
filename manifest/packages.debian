@@ -1,0 +1,12 @@
+# Debian/Ubuntu package records are:
+# name
+zsh
+git
+curl
+fzf
+kitty
+fontconfig
+unzip
+coreutils
+shellcheck
+shfmt

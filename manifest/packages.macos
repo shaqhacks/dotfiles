@@ -1,0 +1,10 @@
+# Homebrew package records are:
+# formula|name
+# cask|name
+formula|git
+formula|fzf
+formula|coreutils
+formula|shellcheck
+formula|shfmt
+cask|kitty
+cask|font-jetbrains-mono-nerd-font
