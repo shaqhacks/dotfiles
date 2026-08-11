@@ -2,9 +2,11 @@
 
 set -u
 
-TEST_ROOT="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
-TESTS_DIR="${TESTS_DIR:-${TEST_ROOT}}"
-export TEST_ROOT TESTS_DIR
+LC_ALL=C
+export LC_ALL
+
+TEST_ROOT="$(CDPATH= cd -P -- "$(dirname -- "$0")" && pwd -P)"
+export TEST_ROOT
 
 . "${TEST_ROOT}/assert.sh"
 
@@ -23,7 +25,16 @@ trap cleanup_runner EXIT HUP INT TERM
 
 add_suite() {
   suite_name="$1"
-  suite_file="${TESTS_DIR}/${suite_name}_test.sh"
+
+  case "${suite_name}" in
+    ""|*/*|*..*|*[![:print:]]*)
+      printf 'not ok - invalid suite name: %s\n' "${suite_name}" >&2
+      failed=$((failed + 1))
+      return 1
+      ;;
+  esac
+
+  suite_file="${TEST_ROOT}/${suite_name}_test.sh"
 
   if [ ! -f "${suite_file}" ]; then
     printf 'not ok - missing suite: %s\n' "${suite_name}" >&2
@@ -31,7 +42,35 @@ add_suite() {
     return 1
   fi
 
+  validate_suite_file "${suite_file}" || return 1
   printf '%s\n' "${suite_file}" >>"${suite_list}"
+}
+
+validate_suite_file() {
+  suite_file="$1"
+  suite_dir="$(CDPATH= cd -P -- "$(dirname -- "${suite_file}")" && pwd -P)" || return 1
+  suite_base="$(basename -- "${suite_file}")"
+
+  if [ "${suite_dir}" != "${TEST_ROOT}" ]; then
+    printf 'not ok - outside test root: %s\n' "${suite_file}" >&2
+    failed=$((failed + 1))
+    return 1
+  fi
+
+  case "${suite_base}" in
+    *_test.sh) ;;
+    *)
+      printf 'not ok - invalid test file: %s\n' "${suite_file}" >&2
+      failed=$((failed + 1))
+      return 1
+      ;;
+  esac
+
+  if [ -L "${suite_file}" ]; then
+    printf 'not ok - outside test root: %s\n' "${suite_file}" >&2
+    failed=$((failed + 1))
+    return 1
+  fi
 }
 
 if [ "$#" -gt 0 ]; then
@@ -40,7 +79,12 @@ if [ "$#" -gt 0 ]; then
     add_suite "${suite_name}"
   done
 else
-  find "${TESTS_DIR}" -type f -name '*_test.sh' | sort >"${suite_list}"
+  : >"${suite_list}"
+  for suite_file in "${TEST_ROOT}"/*_test.sh; do
+    if [ -f "${suite_file}" ]; then
+      validate_suite_file "${suite_file}" && printf '%s\n' "${suite_file}" >>"${suite_list}"
+    fi
+  done
 fi
 
 : >"${test_list}"

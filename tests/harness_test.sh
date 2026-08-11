@@ -56,13 +56,16 @@ test_make_test_home_exports_isolated_xdg_directories() {
 
 test_run_sh_accepts_suite_names_with_spaces() {
   suite_name="suite with spaces"
-  suite_file="${TEST_TMPDIR}/${suite_name}_test.sh"
+  suite_file="${TEST_ROOT}/${suite_name}_test.sh"
   printf '%s\n' \
     'test_space_safe_arguments() {' \
     '  assert_eq "value with spaces" "value with spaces" "space-safe value"' \
     '}' >"${suite_file}"
+  trap 'rm -f "${suite_file}"' EXIT HUP INT TERM
 
-  output="$(TESTS_DIR="${TEST_TMPDIR}" bash "${TEST_ROOT}/run.sh" "${suite_name}")" || fail "space suite failed"
+  output="$(bash "${TEST_ROOT}/run.sh" "${suite_name}")" || fail "space suite failed"
+  rm -f "${suite_file}"
+  trap - EXIT HUP INT TERM
 
   case "${output}" in
     *"ok "*"space_safe_arguments"*) ;;
@@ -71,19 +74,104 @@ test_run_sh_accepts_suite_names_with_spaces() {
 }
 
 test_run_sh_returns_nonzero_for_failed_assertions() {
-  suite_file="${TEST_TMPDIR}/failure_test.sh"
+  suite_file="${TEST_ROOT}/failure_test.sh"
   printf '%s\n' \
     'test_intentional_failure() {' \
     '  assert_eq "expected" "actual" "intentional child failure"' \
     '}' >"${suite_file}"
+  trap 'rm -f "${suite_file}"' EXIT HUP INT TERM
 
-  if output="$(TESTS_DIR="${TEST_TMPDIR}" bash "${TEST_ROOT}/run.sh" failure 2>&1)"; then
+  if output="$(bash "${TEST_ROOT}/run.sh" failure 2>&1)"; then
+    rm -f "${suite_file}"
+    trap - EXIT HUP INT TERM
     fail "runner returned success for a failing suite"
   fi
 
+  rm -f "${suite_file}"
+  trap - EXIT HUP INT TERM
   case "${output}" in
     *"not ok "*"intentional_failure"*"# summary: 0 passed, 1 failed"*) ;;
     *) fail "failure output was not TAP-like: ${output}" ;;
+  esac
+}
+
+test_run_sh_rejects_traversal_suite_names() {
+  if output="$(bash "${TEST_ROOT}/run.sh" "../harness" 2>&1)"; then
+    fail "runner accepted a traversal suite name"
+  fi
+
+  case "${output}" in
+    *"invalid suite name"*"../harness"*) ;;
+    *) fail "traversal rejection was unclear: ${output}" ;;
+  esac
+}
+
+test_run_sh_rejects_control_whitespace_suite_names() {
+  tab_suite="$(printf 'bad\tname')"
+  newline_suite="$(printf 'bad\nname')"
+
+  if output="$(bash "${TEST_ROOT}/run.sh" "${tab_suite}" 2>&1)"; then
+    fail "runner accepted a tab in a suite name"
+  fi
+  case "${output}" in
+    *"invalid suite name"*) ;;
+    *) fail "tab rejection was unclear: ${output}" ;;
+  esac
+
+  if output="$(bash "${TEST_ROOT}/run.sh" "${newline_suite}" 2>&1)"; then
+    fail "runner accepted a newline in a suite name"
+  fi
+  case "${output}" in
+    *"invalid suite name"*) ;;
+    *) fail "newline rejection was unclear: ${output}" ;;
+  esac
+}
+
+test_run_sh_ignores_caller_controlled_tests_dir() {
+  suite_file="${TEST_TMPDIR}/outside_test.sh"
+  marker_file="${TEST_TMPDIR}/outside-ran"
+  printf '%s\n' \
+    'test_outside_suite() {' \
+    "  printf ran >\"${marker_file}\"" \
+    '}' >"${suite_file}"
+
+  if output="$(TESTS_DIR="${TEST_TMPDIR}" bash "${TEST_ROOT}/run.sh" outside 2>&1)"; then
+    fail "runner executed a suite from caller-controlled TESTS_DIR"
+  fi
+
+  if [ -e "${marker_file}" ]; then
+    fail "outside suite marker was created"
+  fi
+  case "${output}" in
+    *"missing suite: outside"*) ;;
+    *) fail "outside suite rejection was unclear: ${output}" ;;
+  esac
+}
+
+test_run_sh_rejects_suite_symlink_outside_test_root() {
+  suite_name="outside symlink"
+  suite_file="${TEST_ROOT}/${suite_name}_test.sh"
+  outside_file="${TEST_TMPDIR}/outside_symlink_target_test.sh"
+  marker_file="${TEST_TMPDIR}/symlink-ran"
+  printf '%s\n' \
+    'test_outside_symlink_target() {' \
+    "  printf ran >\"${marker_file}\"" \
+    '}' >"${outside_file}"
+  ln -s "${outside_file}" "${suite_file}"
+  trap 'rm -f "${suite_file}"' EXIT HUP INT TERM
+
+  if output="$(bash "${TEST_ROOT}/run.sh" "${suite_name}" 2>&1)"; then
+    fail "runner sourced a symlinked suite outside TEST_ROOT"
+  fi
+
+  rm -f "${suite_file}"
+  trap - EXIT HUP INT TERM
+  if [ -e "${marker_file}" ]; then
+    fail "symlinked outside suite marker was created"
+  fi
+  case "${output}" in
+    *"outside test root"*) ;;
+    *) fail "symlink rejection was unclear: ${output}" ;;
   esac
 }
 
