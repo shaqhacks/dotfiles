@@ -33,6 +33,7 @@ links_plan_record() {
   relative_source="$1"
   relative_destination="$2"
 
+  validate_repo_source "${LINKS_REPO_ROOT}" "${relative_source}" || return 1
   source_absolute="$(links_source_path "${LINKS_REPO_ROOT}" "${relative_source}")" || return 1
   destination_absolute="$(links_destination_path "${relative_destination}")" || return 1
 
@@ -66,6 +67,7 @@ links_append_preflight_record() {
   relative_source="$1"
   relative_destination="$2"
 
+  validate_repo_source "${LINKS_REPO_ROOT}" "${relative_source}" || return 1
   source_absolute="$(links_source_path "${LINKS_REPO_ROOT}" "${relative_source}")" || return 1
   destination_absolute="$(links_destination_path "${relative_destination}")" || return 1
   parent_path="$(dirname -- "${destination_absolute}")"
@@ -167,7 +169,7 @@ links_apply_record() {
   fi
 
   ln -s "${source_absolute}" "${destination_absolute}" || return 1
-  links_journal link "${destination_absolute}" "" || return 1
+  links_journal link "${destination_absolute}" "${source_absolute}" || return 1
   links_maybe_fail_after_mutation
 }
 
@@ -237,7 +239,10 @@ links_rollback_record() {
   case "${operation}" in
     link)
       if [ -L "${destination}" ]; then
-        rm "${destination}" || return 1
+        current_target="$(readlink "${destination}")" || return 1
+        if [ -z "${backup}" ] || [ "${current_target}" = "${backup}" ]; then
+          rm "${destination}" || return 1
+        fi
       fi
       ;;
     backup)

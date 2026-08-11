@@ -109,6 +109,46 @@ test_links_apply_replaces_wrong_symlink_with_backup_and_rollback_restores_it() {
   assert_symlink_target "${HOME}/.zshrc" "${outside}"
 }
 
+test_links_rollback_twice_preserves_restored_wrong_symlink() {
+  load_links || return 1
+  make_test_home
+  make_links_repo || return 1
+  write_file "${links_manifest}" 'zsh/zshrc.symlink|.zshrc'
+  outside="${TEST_TMPDIR}/outside-target"
+  printf 'outside\n' >"${outside}"
+  ln -s "${outside}" "${HOME}/.zshrc" || return 1
+
+  apply_links || return 1
+  links_rollback "${journal}" || return 1
+  links_rollback "${journal}" || return 1
+
+  assert_symlink_target "${HOME}/.zshrc" "${outside}"
+}
+
+test_links_apply_preflight_uses_explicit_repo_root_for_sources() {
+  load_links || return 1
+  make_test_home
+  make_links_repo || return 1
+  manifest_repo="${repo_root}"
+  passed_repo="${TEST_TMPDIR}/passed repo"
+  mkdir -p "${passed_repo}/zsh" || return 1
+  repo_root="${passed_repo}"
+  write_file "${links_manifest}" 'zsh/zshrc.symlink|.zshrc'
+
+  if apply_links >/dev/null 2>&1; then
+    repo_root="${manifest_repo}"
+    fail "links_apply accepted source missing under explicit repo root"
+    return 1
+  fi
+
+  if [ -e "${HOME}/.zshrc" ] || [ -L "${HOME}/.zshrc" ]; then
+    repo_root="${manifest_repo}"
+    fail "failed explicit repo preflight still mutated destination"
+    return 1
+  fi
+  repo_root="${manifest_repo}"
+}
+
 test_links_apply_preserves_regular_file_conflict_under_relative_backup_path() {
   load_links || return 1
   make_test_home
