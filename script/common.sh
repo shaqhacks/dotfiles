@@ -84,6 +84,16 @@ path_is_under() {
   esac
 }
 
+reject_journal_field() {
+  field_value="$1"
+  field_name="$2"
+
+  if has_control_chars "${field_value}"; then
+    error "journal ${field_name} must not contain tabs or newlines"
+    return 1
+  fi
+}
+
 validate_repo_source() {
   repo_root="$1"
   relative_path="$2"
