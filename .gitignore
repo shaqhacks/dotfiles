@@ -7,6 +7,6 @@
 *.tmp
 .env
 .env.*
-gitconfig.local
-zshrc.local
+/.gitconfig.local
+/.zshrc.local
 tmp/

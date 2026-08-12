@@ -96,3 +96,11 @@ test_hygiene_rejects_private_paths_identity_secrets_placeholders_and_insecure_ur
 test_hygiene_markdown_relative_links_resolve() {
   hygiene_markdown_links
 }
+
+test_hygiene_ignores_root_local_override_files() {
+  (
+    cd "${HYGIENE_REPO_ROOT}" || exit 1
+    git check-ignore -q .gitconfig.local || exit 1
+    git check-ignore -q .zshrc.local
+  )
+}
