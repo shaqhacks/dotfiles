@@ -1,0 +1,44 @@
+# Resolve this repository from the canonical target of the sourced .zshrc.
+DOTFILES_ZSHRC="${${(%):-%N}:A}"
+export DOTFILES_REPO="${DOTFILES_ZSHRC:h:h}"
+
+dotfiles_trace() {
+  if [[ -n "${DOTFILES_ZSH_LOAD_TRACE:-}" ]]; then
+    print -r -- "$1" >>"${DOTFILES_ZSH_LOAD_TRACE}"
+  fi
+}
+
+dotfiles_source_if_present() {
+  local file="$1"
+
+  if [[ -r "${file}" ]]; then
+    source "${file}"
+  fi
+}
+
+DOTFILES_CACHE_HOME="${XDG_CACHE_HOME:-${HOME}/.cache}"
+DOTFILES_DATA_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}"
+DOTFILES_PLUGIN_ROOT="${DOTFILES_DATA_HOME}/dotfiles/plugins"
+
+dotfiles_source_if_present "${DOTFILES_CACHE_HOME}/p10k-instant-prompt-${USER:-user}.zsh"
+
+source "${DOTFILES_REPO}/zsh/path.zsh"
+dotfiles_trace path
+source "${DOTFILES_REPO}/zsh/config.zsh"
+dotfiles_trace config
+source "${DOTFILES_REPO}/system/aliases.zsh"
+dotfiles_trace aliases
+source "${DOTFILES_REPO}/system/colors.zsh"
+dotfiles_trace colors
+source "${DOTFILES_REPO}/zsh/keybindings.zsh"
+dotfiles_trace keybindings
+source "${DOTFILES_REPO}/zsh/completion.zsh"
+dotfiles_trace completion
+
+dotfiles_source_if_present "${DOTFILES_PLUGIN_ROOT}/powerlevel10k/powerlevel10k.zsh-theme"
+dotfiles_source_if_present "${DOTFILES_REPO}/powerlevel10k/p10k.zsh"
+dotfiles_source_if_present "${DOTFILES_PLUGIN_ROOT}/zsh-autosuggestions/zsh-autosuggestions.zsh"
+dotfiles_source_if_present "${HOME}/.zshrc.local"
+dotfiles_source_if_present "${DOTFILES_PLUGIN_ROOT}/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
+
+unfunction dotfiles_source_if_present dotfiles_trace
