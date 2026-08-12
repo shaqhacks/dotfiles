@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+
+contains_line() {
+  list="$1"
+  needle="$2"
+
+  printf '%s\n' "${list}" | grep -F -x -- "${needle}" >/dev/null 2>&1
+}
+
+printf 'brew %s\n' "$*" >>"${DOTFILES_STUB_LOG}"
+
+case "$1" in
+  list)
+    case "$2" in
+      --formula)
+        contains_line "${DOTFILES_STUB_BREW_FORMULAS:-}" "$3"
+        exit "$?"
+        ;;
+      --cask)
+        contains_line "${DOTFILES_STUB_BREW_CASKS:-}" "$3"
+        exit "$?"
+        ;;
+    esac
+    ;;
+  install)
+    case "$2" in
+      --cask)
+        case "${3:-}" in
+          fail) exit 43 ;;
+        esac
+        ;;
+      *)
+        case "${2:-}" in
+          fail) exit 43 ;;
+        esac
+        ;;
+    esac
+    exit 0
+    ;;
+esac
+
+exit 64

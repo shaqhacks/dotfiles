@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+printf 'chsh %s\n' "$*" >>"${DOTFILES_STUB_LOG}"
+exit 95

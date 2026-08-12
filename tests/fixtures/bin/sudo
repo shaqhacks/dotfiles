@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+printf 'sudo %s\n' "$*" >>"${DOTFILES_STUB_LOG}"
+
+if [ "${DOTFILES_STUB_SUDO_FAIL:-0}" = 1 ]; then
+  exit 45
+fi
+
+"$@"

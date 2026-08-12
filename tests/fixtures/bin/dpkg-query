@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+contains_line() {
+  list="$1"
+  needle="$2"
+
+  printf '%s\n' "${list}" | grep -F -x -- "${needle}" >/dev/null 2>&1
+}
+
+printf 'dpkg-query %s\n' "$*" >>"${DOTFILES_STUB_LOG}"
+
+package=""
+for arg in "$@"; do
+  package="${arg}"
+done
+if contains_line "${DOTFILES_STUB_DPKG_PACKAGES:-}" "${package}"; then
+  exit 0
+fi
+
+exit 1
