@@ -1,0 +1,17 @@
+[init]
+	defaultBranch = main
+
+[color]
+	ui = auto
+
+[fetch]
+	prune = true
+
+[pull]
+	ff = only
+
+[push]
+	autoSetupRemote = true
+
+[include]
+	path = ~/.gitconfig.local
