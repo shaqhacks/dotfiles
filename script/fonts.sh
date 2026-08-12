@@ -44,69 +44,69 @@ font_read_metadata() {
     fi
     trimmed_line="$(trim_leading_spaces "${line}")"
     case "${trimmed_line}" in
-      "#"*) continue ;;
+    "#"*) continue ;;
     esac
     if has_control_chars "${line}"; then
       manifest_error "${metadata_file}" "${line_number}" "control characters are not allowed"
       return 1
     fi
     case "${line}" in
-      *"|"*"|"*"|"*"|"*)
-        FONT_NAME="${line%%|*}"
-        rest="${line#*|}"
-        FONT_VERSION="${rest%%|*}"
-        rest="${rest#*|}"
-        FONT_ASSET="${rest%%|*}"
-        rest="${rest#*|}"
-        FONT_SHA256="${rest%%|*}"
-        FONT_URL="${rest#*|}"
-        case "${FONT_URL}" in
-          *"|"*)
-            manifest_error "${metadata_file}" "${line_number}" "expected five fields"
-            return 1
-            ;;
-        esac
-        ;;
-      *)
+    *"|"*"|"*"|"*"|"*)
+      FONT_NAME="${line%%|*}"
+      rest="${line#*|}"
+      FONT_VERSION="${rest%%|*}"
+      rest="${rest#*|}"
+      FONT_ASSET="${rest%%|*}"
+      rest="${rest#*|}"
+      FONT_SHA256="${rest%%|*}"
+      FONT_URL="${rest#*|}"
+      case "${FONT_URL}" in
+      *"|"*)
         manifest_error "${metadata_file}" "${line_number}" "expected five fields"
         return 1
         ;;
+      esac
+      ;;
+    *)
+      manifest_error "${metadata_file}" "${line_number}" "expected five fields"
+      return 1
+      ;;
     esac
     case "${FONT_NAME}" in
-      JetBrainsMonoNerdFont) ;;
-      *)
-        manifest_error "${metadata_file}" "${line_number}" "unsupported font name"
-        return 1
-        ;;
+    JetBrainsMonoNerdFont) ;;
+    *)
+      manifest_error "${metadata_file}" "${line_number}" "unsupported font name"
+      return 1
+      ;;
     esac
     case "${FONT_VERSION}" in
-      v[0-9]*.[0-9]*.[0-9]*) ;;
-      *)
-        manifest_error "${metadata_file}" "${line_number}" "invalid font version"
-        return 1
-        ;;
+    v[0-9]*.[0-9]*.[0-9]*) ;;
+    *)
+      manifest_error "${metadata_file}" "${line_number}" "invalid font version"
+      return 1
+      ;;
     esac
     case "${FONT_ASSET}" in
-      JetBrainsMono.zip) ;;
-      *)
-        manifest_error "${metadata_file}" "${line_number}" "invalid font asset"
-        return 1
-        ;;
+    JetBrainsMono.zip) ;;
+    *)
+      manifest_error "${metadata_file}" "${line_number}" "invalid font asset"
+      return 1
+      ;;
     esac
     case "${FONT_URL}" in
-      https://*) ;;
-      *)
-        manifest_error "${metadata_file}" "${line_number}" "font URL must be HTTPS"
-        return 1
-        ;;
+    https://*) ;;
+    *)
+      manifest_error "${metadata_file}" "${line_number}" "font URL must be HTTPS"
+      return 1
+      ;;
     esac
     case "${FONT_SHA256}" in
-      [0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f])
-        ;;
-      *)
-        manifest_error "${metadata_file}" "${line_number}" "font checksum must be 64 lowercase hex characters"
-        return 1
-        ;;
+    [0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f])
+      ;;
+    *)
+      manifest_error "${metadata_file}" "${line_number}" "font checksum must be 64 lowercase hex characters"
+      return 1
+      ;;
     esac
     return 0
   done <"${metadata_file}"
@@ -127,15 +127,15 @@ font_plan() {
   platform="$1"
 
   case "${platform}" in
-    macos)
-      return 0
-      ;;
-    debian|linux)
-      ;;
-    *)
-      error "unsupported font platform: ${platform}"
-      return 1
-      ;;
+  macos)
+    return 0
+    ;;
+  debian | linux)
+    ;;
+  *)
+    error "unsupported font platform: ${platform}"
+    return 1
+    ;;
   esac
 
   metadata_file="$(font_metadata_path)" || return 1
@@ -152,18 +152,18 @@ font_archive_safe_member() {
   member="$1"
 
   case "${member}" in
-    ""|/*|*"/../"*|../*|*".."|*"\\"*|*":"*)
-      return 1
-      ;;
+  "" | /* | *"/../"* | ../* | *".." | *"\\"* | *":"*)
+    return 1
+    ;;
   esac
 
   remaining="${member}"
   while :; do
     segment="${remaining%%/*}"
     case "${segment}" in
-      ""|"."|"..")
-        return 1
-        ;;
+    "" | "." | "..")
+      return 1
+      ;;
     esac
     if [ "${segment}" = "${remaining}" ]; then
       break
@@ -176,8 +176,8 @@ font_archive_has_font_suffix() {
   member="$1"
 
   case "${member}" in
-    *.ttf|*.otf) return 0 ;;
-    *) return 1 ;;
+  *.ttf | *.otf) return 0 ;;
+  *) return 1 ;;
   esac
 }
 

@@ -9,51 +9,51 @@ if [ "${1:-}" = "-C" ]; then
 fi
 
 case "${1:-}" in
-  clone)
-    url="$2"
-    dest="$3"
-    if [ "${DOTFILES_STUB_GIT_CLONE_FAIL:-0}" = 1 ]; then
-      exit 46
-    fi
-    mkdir -p "${dest}/.git" || exit 1
-    printf '%s\n' "${url}" >"${dest}/.git/origin" || exit 1
-    printf '%s\n' "${DOTFILES_STUB_GIT_CLONE_COMMIT:-0000000000000000000000000000000000000000}" >"${dest}/.git/commit" || exit 1
-    printf 'plugin\n' >"${dest}/${DOTFILES_STUB_PLUGIN_ENTRYPOINT:-sample.plugin.zsh}" || exit 1
+clone)
+  url="$2"
+  dest="$3"
+  if [ "${DOTFILES_STUB_GIT_CLONE_FAIL:-0}" = 1 ]; then
+    exit 46
+  fi
+  mkdir -p "${dest}/.git" || exit 1
+  printf '%s\n' "${url}" >"${dest}/.git/origin" || exit 1
+  printf '%s\n' "${DOTFILES_STUB_GIT_CLONE_COMMIT:-0000000000000000000000000000000000000000}" >"${dest}/.git/commit" || exit 1
+  printf 'plugin\n' >"${dest}/${DOTFILES_STUB_PLUGIN_ENTRYPOINT:-sample.plugin.zsh}" || exit 1
+  ;;
+config)
+  case "${2:-}" in
+  --get) cat "${cwd}/.git/origin" ;;
+  *) exit 64 ;;
+  esac
+  ;;
+rev-parse)
+  case "${2:-}" in
+  HEAD) cat "${cwd}/.git/commit" ;;
+  --git-dir)
+    [ -d "${cwd}/.git" ] && printf '%s/.git\n' "${cwd}" || exit 1
     ;;
-  config)
-    case "${2:-}" in
-      --get) cat "${cwd}/.git/origin" ;;
-      *) exit 64 ;;
-    esac
-    ;;
-  rev-parse)
-    case "${2:-}" in
-      HEAD) cat "${cwd}/.git/commit" ;;
-      --git-dir)
-        [ -d "${cwd}/.git" ] && printf '%s/.git\n' "${cwd}" || exit 1
-        ;;
-      *) exit 64 ;;
-    esac
-    ;;
-  status)
-    if [ -f "${cwd}/.git/dirty" ]; then
-      printf ' M file\n'
-    fi
-    ;;
-  fetch)
-    if [ "${DOTFILES_STUB_GIT_FETCH_FAIL:-0}" = 1 ]; then
-      exit 47
-    fi
-    ;;
-  checkout)
-    if [ "${DOTFILES_STUB_GIT_CHECKOUT_FAIL:-0}" = 1 ]; then
-      exit 48
-    fi
-    commit="${@: -1}"
-    printf '%s\n' "${commit}" >"${cwd}/.git/commit" || exit 1
-    printf 'plugin\n' >"${cwd}/${DOTFILES_STUB_PLUGIN_ENTRYPOINT:-sample.plugin.zsh}" || exit 1
-    ;;
-  *)
-    exit 64
-    ;;
+  *) exit 64 ;;
+  esac
+  ;;
+status)
+  if [ -f "${cwd}/.git/dirty" ]; then
+    printf ' M file\n'
+  fi
+  ;;
+fetch)
+  if [ "${DOTFILES_STUB_GIT_FETCH_FAIL:-0}" = 1 ]; then
+    exit 47
+  fi
+  ;;
+checkout)
+  if [ "${DOTFILES_STUB_GIT_CHECKOUT_FAIL:-0}" = 1 ]; then
+    exit 48
+  fi
+  commit="${@: -1}"
+  printf '%s\n' "${commit}" >"${cwd}/.git/commit" || exit 1
+  printf 'plugin\n' >"${cwd}/${DOTFILES_STUB_PLUGIN_ENTRYPOINT:-sample.plugin.zsh}" || exit 1
+  ;;
+*)
+  exit 64
+  ;;
 esac

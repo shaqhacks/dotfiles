@@ -15,8 +15,8 @@ error() {
 
 has_control_chars() {
   case "$1" in
-    *[![:print:]]*) return 0 ;;
-    *) return 1 ;;
+  *[![:print:]]*) return 0 ;;
+  *) return 1 ;;
   esac
 }
 
@@ -24,8 +24,8 @@ trim_leading_spaces() {
   value="$1"
   while :; do
     case "${value}" in
-      " "*) value="${value# }" ;;
-      *) break ;;
+    " "*) value="${value# }" ;;
+    *) break ;;
     esac
   done
   printf '%s' "${value}"
@@ -35,9 +35,9 @@ is_blank_line() {
   value="$1"
   while :; do
     case "${value}" in
-      "") return 0 ;;
-      " "*) value="${value# }" ;;
-      *) return 1 ;;
+    "") return 0 ;;
+    " "*) value="${value# }" ;;
+    *) return 1 ;;
     esac
   done
 }
@@ -46,9 +46,9 @@ validate_relative_path() {
   relative_path="$1"
 
   case "${relative_path}" in
-    ""|/*)
-      return 1
-      ;;
+  "" | /*)
+    return 1
+    ;;
   esac
   if has_control_chars "${relative_path}"; then
     return 1
@@ -58,9 +58,9 @@ validate_relative_path() {
   while :; do
     segment="${remaining%%/*}"
     case "${segment}" in
-      ""|"."|"..")
-        return 1
-        ;;
+    "" | "." | "..")
+      return 1
+      ;;
     esac
 
     if [ "${segment}" = "${remaining}" ]; then
@@ -80,8 +80,8 @@ path_is_under() {
   parent_path="$2"
 
   case "${child_path}" in
-    "${parent_path}"|"${parent_path}"/*) return 0 ;;
-    *) return 1 ;;
+  "${parent_path}" | "${parent_path}"/*) return 0 ;;
+  *) return 1 ;;
   esac
 }
 
@@ -171,9 +171,9 @@ validate_token() {
   token="$1"
 
   case "${token}" in
-    ""|*[\|]*)
-      return 1
-      ;;
+  "" | *[\|]*)
+    return 1
+    ;;
   esac
   if has_control_chars "${token}"; then
     return 1
@@ -185,9 +185,9 @@ validate_package_name() {
 
   validate_token "${package_name}" || return 1
   case "${package_name}" in
-    *[!A-Za-z0-9._+-]*)
-      return 1
-      ;;
+  *[!A-Za-z0-9._+-]*)
+    return 1
+    ;;
   esac
 }
 
@@ -196,8 +196,8 @@ validate_plugin_url() {
 
   validate_token "${plugin_url}" || return 1
   case "${plugin_url}" in
-    https://*.git) return 0 ;;
-    *) return 1 ;;
+  https://*.git) return 0 ;;
+  *) return 1 ;;
   esac
 }
 
@@ -205,12 +205,12 @@ validate_commit_id() {
   commit_id="$1"
 
   case "${commit_id}" in
-    [0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f])
-      return 0
-      ;;
-    *)
-      return 1
-      ;;
+  [0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f])
+    return 0
+    ;;
+  *)
+    return 1
+    ;;
   esac
 }
 
@@ -235,16 +235,16 @@ parse_two_fields() {
   record="$1"
 
   case "${record}" in
-    *"|"*)
-      field1="${record%%|*}"
-      field2="${record#*|}"
-      case "${field2}" in
-        *"|"*) return 1 ;;
-      esac
-      ;;
-    *)
-      return 1
-      ;;
+  *"|"*)
+    field1="${record%%|*}"
+    field2="${record#*|}"
+    case "${field2}" in
+    *"|"*) return 1 ;;
+    esac
+    ;;
+  *)
+    return 1
+    ;;
   esac
 }
 
@@ -252,20 +252,20 @@ parse_four_fields() {
   record="$1"
 
   case "${record}" in
-    *"|"*"|"*"|"*)
-      field1="${record%%|*}"
-      rest="${record#*|}"
-      field2="${rest%%|*}"
-      rest="${rest#*|}"
-      field3="${rest%%|*}"
-      field4="${rest#*|}"
-      case "${field4}" in
-        *"|"*) return 1 ;;
-      esac
-      ;;
-    *)
-      return 1
-      ;;
+  *"|"*"|"*"|"*)
+    field1="${record%%|*}"
+    rest="${record#*|}"
+    field2="${rest%%|*}"
+    rest="${rest#*|}"
+    field3="${rest%%|*}"
+    field4="${rest#*|}"
+    case "${field4}" in
+    *"|"*) return 1 ;;
+    esac
+    ;;
+  *)
+    return 1
+    ;;
   esac
 }
 
@@ -281,11 +281,11 @@ manifest_each() {
   callback="$3"
 
   case "${manifest_kind}" in
-    links|macos|debian|plugins) ;;
-    *)
-      error "unknown manifest kind: ${manifest_kind}"
-      return 1
-      ;;
+  links | macos | debian | plugins) ;;
+  *)
+    error "unknown manifest kind: ${manifest_kind}"
+    return 1
+    ;;
   esac
   if [ ! -f "${manifest_path}" ] || [ -L "${manifest_path}" ]; then
     error "missing manifest: ${manifest_path}"
@@ -307,7 +307,7 @@ manifest_each() {
 
     trimmed_line="$(trim_leading_spaces "${line}")"
     case "${trimmed_line}" in
-      "#"*) continue ;;
+    "#"*) continue ;;
     esac
 
     if has_control_chars "${line}"; then
@@ -317,89 +317,89 @@ manifest_each() {
     fi
 
     case "${manifest_kind}" in
-      links)
-        if ! parse_two_fields "${line}"; then
-          manifest_error "${manifest_path}" "${line_number}" "expected two fields"
-          rm -f "${seen_file}"
-          return 1
-        fi
-        if ! validate_repo_source "${repo_root}" "${field1}"; then
-          manifest_error "${manifest_path}" "${line_number}" "invalid repository source"
-          rm -f "${seen_file}"
-          return 1
-        fi
-        if ! validate_home_destination "${field2}"; then
-          manifest_error "${manifest_path}" "${line_number}" "invalid home destination"
-          rm -f "${seen_file}"
-          return 1
-        fi
-        duplicate_key="dest:${field2}"
+    links)
+      if ! parse_two_fields "${line}"; then
+        manifest_error "${manifest_path}" "${line_number}" "expected two fields"
+        rm -f "${seen_file}"
+        return 1
+      fi
+      if ! validate_repo_source "${repo_root}" "${field1}"; then
+        manifest_error "${manifest_path}" "${line_number}" "invalid repository source"
+        rm -f "${seen_file}"
+        return 1
+      fi
+      if ! validate_home_destination "${field2}"; then
+        manifest_error "${manifest_path}" "${line_number}" "invalid home destination"
+        rm -f "${seen_file}"
+        return 1
+      fi
+      duplicate_key="dest:${field2}"
+      ;;
+    macos)
+      if ! parse_two_fields "${line}"; then
+        manifest_error "${manifest_path}" "${line_number}" "expected two fields"
+        rm -f "${seen_file}"
+        return 1
+      fi
+      case "${field1}" in
+      formula | cask) ;;
+      *)
+        manifest_error "${manifest_path}" "${line_number}" "expected formula or cask"
+        rm -f "${seen_file}"
+        return 1
         ;;
-      macos)
-        if ! parse_two_fields "${line}"; then
-          manifest_error "${manifest_path}" "${line_number}" "expected two fields"
-          rm -f "${seen_file}"
-          return 1
-        fi
-        case "${field1}" in
-          formula|cask) ;;
-          *)
-            manifest_error "${manifest_path}" "${line_number}" "expected formula or cask"
-            rm -f "${seen_file}"
-            return 1
-            ;;
-        esac
-        if ! validate_package_name "${field2}"; then
-          manifest_error "${manifest_path}" "${line_number}" "invalid package name"
-          rm -f "${seen_file}"
-          return 1
-        fi
-        duplicate_key="package:${field2}"
+      esac
+      if ! validate_package_name "${field2}"; then
+        manifest_error "${manifest_path}" "${line_number}" "invalid package name"
+        rm -f "${seen_file}"
+        return 1
+      fi
+      duplicate_key="package:${field2}"
+      ;;
+    debian)
+      case "${line}" in
+      *"|"*)
+        manifest_error "${manifest_path}" "${line_number}" "expected one field"
+        rm -f "${seen_file}"
+        return 1
         ;;
-      debian)
-        case "${line}" in
-          *"|"*)
-            manifest_error "${manifest_path}" "${line_number}" "expected one field"
-            rm -f "${seen_file}"
-            return 1
-            ;;
-        esac
-        field1="${line}"
-        if ! validate_package_name "${field1}"; then
-          manifest_error "${manifest_path}" "${line_number}" "invalid package name"
-          rm -f "${seen_file}"
-          return 1
-        fi
-        duplicate_key="package:${field1}"
-        ;;
-      plugins)
-        if ! parse_four_fields "${line}"; then
-          manifest_error "${manifest_path}" "${line_number}" "expected four fields"
-          rm -f "${seen_file}"
-          return 1
-        fi
-        if ! validate_package_name "${field1}"; then
-          manifest_error "${manifest_path}" "${line_number}" "invalid plugin name"
-          rm -f "${seen_file}"
-          return 1
-        fi
-        if ! validate_plugin_url "${field2}"; then
-          manifest_error "${manifest_path}" "${line_number}" "plugin URL must be HTTPS"
-          rm -f "${seen_file}"
-          return 1
-        fi
-        if ! validate_commit_id "${field3}"; then
-          manifest_error "${manifest_path}" "${line_number}" "plugin commit must be 40 lowercase hex characters"
-          rm -f "${seen_file}"
-          return 1
-        fi
-        if ! validate_relative_path "${field4}"; then
-          manifest_error "${manifest_path}" "${line_number}" "invalid plugin entrypoint"
-          rm -f "${seen_file}"
-          return 1
-        fi
-        duplicate_key="plugin:${field1}"
-        ;;
+      esac
+      field1="${line}"
+      if ! validate_package_name "${field1}"; then
+        manifest_error "${manifest_path}" "${line_number}" "invalid package name"
+        rm -f "${seen_file}"
+        return 1
+      fi
+      duplicate_key="package:${field1}"
+      ;;
+    plugins)
+      if ! parse_four_fields "${line}"; then
+        manifest_error "${manifest_path}" "${line_number}" "expected four fields"
+        rm -f "${seen_file}"
+        return 1
+      fi
+      if ! validate_package_name "${field1}"; then
+        manifest_error "${manifest_path}" "${line_number}" "invalid plugin name"
+        rm -f "${seen_file}"
+        return 1
+      fi
+      if ! validate_plugin_url "${field2}"; then
+        manifest_error "${manifest_path}" "${line_number}" "plugin URL must be HTTPS"
+        rm -f "${seen_file}"
+        return 1
+      fi
+      if ! validate_commit_id "${field3}"; then
+        manifest_error "${manifest_path}" "${line_number}" "plugin commit must be 40 lowercase hex characters"
+        rm -f "${seen_file}"
+        return 1
+      fi
+      if ! validate_relative_path "${field4}"; then
+        manifest_error "${manifest_path}" "${line_number}" "invalid plugin entrypoint"
+        rm -f "${seen_file}"
+        return 1
+      fi
+      duplicate_key="plugin:${field1}"
+      ;;
     esac
 
     if seen_contains "${seen_file}" "${duplicate_key}"; then
@@ -410,9 +410,9 @@ manifest_each() {
     seen_add "${seen_file}" "${duplicate_key}"
 
     case "${manifest_kind}" in
-      links|macos) "${callback}" "${field1}" "${field2}" ;;
-      debian) "${callback}" "${field1}" ;;
-      plugins) "${callback}" "${field1}" "${field2}" "${field3}" "${field4}" ;;
+    links | macos) "${callback}" "${field1}" "${field2}" ;;
+    debian) "${callback}" "${field1}" ;;
+    plugins) "${callback}" "${field1}" "${field2}" "${field3}" "${field4}" ;;
     esac
     callback_status=$?
     if [ "${callback_status}" -ne 0 ]; then

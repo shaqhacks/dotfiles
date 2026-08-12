@@ -68,15 +68,15 @@ doctor_check_packages() {
   fi
 
   case "${DOCTOR_PLATFORM}" in
-    debian)
-      manifest_each debian "${DOCTOR_ROOT}/manifest/packages.debian" doctor_check_package_debian || return 1
-      ;;
-    macos)
-      manifest_each macos "${DOCTOR_ROOT}/manifest/packages.macos" doctor_check_package_macos || return 1
-      ;;
-    *)
-      doctor_fail "unsupported platform: ${DOCTOR_PLATFORM}"
-      ;;
+  debian)
+    manifest_each debian "${DOCTOR_ROOT}/manifest/packages.debian" doctor_check_package_debian || return 1
+    ;;
+  macos)
+    manifest_each macos "${DOCTOR_ROOT}/manifest/packages.macos" doctor_check_package_macos || return 1
+    ;;
+  *)
+    doctor_fail "unsupported platform: ${DOCTOR_PLATFORM}"
+    ;;
   esac
 }
 
@@ -123,17 +123,17 @@ doctor_check_plugins() {
 
 doctor_check_fonts() {
   case "${DOCTOR_PLATFORM}" in
-    macos)
-      return 0
-      ;;
-    debian)
-      if ! font_installed; then
-        doctor_fail "font is not installed: JetBrainsMonoNerdFont"
-      fi
-      ;;
-    *)
-      doctor_fail "unsupported platform: ${DOCTOR_PLATFORM}"
-      ;;
+  macos)
+    return 0
+    ;;
+  debian)
+    if ! font_installed; then
+      doctor_fail "font is not installed: JetBrainsMonoNerdFont"
+    fi
+    ;;
+  *)
+    doctor_fail "unsupported platform: ${DOCTOR_PLATFORM}"
+    ;;
   esac
 }
 

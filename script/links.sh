@@ -212,20 +212,20 @@ links_apply() {
   LINKS_MUTATION_COUNT=0
   while IFS='	' read -r action source_absolute destination_absolute backup_path parent_path; do
     case "${action}" in
-      noop) ;;
-      link)
-        if ! links_apply_record "${source_absolute}" "${destination_absolute}" "${backup_path}" "${parent_path}"; then
-          links_rollback "${LINKS_JOURNAL}"
-          rm -f "${LINKS_PREFLIGHT_FILE}"
-          return 1
-        fi
-        ;;
-      *)
-        error "unknown link preflight action: ${action}"
+    noop) ;;
+    link)
+      if ! links_apply_record "${source_absolute}" "${destination_absolute}" "${backup_path}" "${parent_path}"; then
         links_rollback "${LINKS_JOURNAL}"
         rm -f "${LINKS_PREFLIGHT_FILE}"
         return 1
-        ;;
+      fi
+      ;;
+    *)
+      error "unknown link preflight action: ${action}"
+      links_rollback "${LINKS_JOURNAL}"
+      rm -f "${LINKS_PREFLIGHT_FILE}"
+      return 1
+      ;;
     esac
   done <"${LINKS_PREFLIGHT_FILE}"
 
@@ -238,32 +238,32 @@ links_rollback_record() {
   backup="$3"
 
   case "${operation}" in
-    link)
-      if [ -L "${destination}" ]; then
-        current_target="$(readlink "${destination}")" || return 1
-        if [ -z "${backup}" ] || [ "${current_target}" = "${backup}" ]; then
-          rm "${destination}" || return 1
-        fi
+  link)
+    if [ -L "${destination}" ]; then
+      current_target="$(readlink "${destination}")" || return 1
+      if [ -z "${backup}" ] || [ "${current_target}" = "${backup}" ]; then
+        rm "${destination}" || return 1
       fi
-      ;;
-    backup)
-      if [ -e "${backup}" ] || [ -L "${backup}" ]; then
-        if [ ! -e "${destination}" ] && [ ! -L "${destination}" ]; then
-          mv "${backup}" "${destination}" || return 1
-        fi
+    fi
+    ;;
+  backup)
+    if [ -e "${backup}" ] || [ -L "${backup}" ]; then
+      if [ ! -e "${destination}" ] && [ ! -L "${destination}" ]; then
+        mv "${backup}" "${destination}" || return 1
       fi
-      ;;
-    mkdir)
-      if [ -d "${destination}" ]; then
-        rmdir "${destination}" >/dev/null 2>&1 || :
-      fi
-      ;;
-    "")
-      ;;
-    *)
-      error "unknown rollback operation: ${operation}"
-      return 1
-      ;;
+    fi
+    ;;
+  mkdir)
+    if [ -d "${destination}" ]; then
+      rmdir "${destination}" >/dev/null 2>&1 || :
+    fi
+    ;;
+  "")
+    ;;
+  *)
+    error "unknown rollback operation: ${operation}"
+    return 1
+    ;;
   esac
 }
 

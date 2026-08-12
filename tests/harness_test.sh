@@ -1,3 +1,5 @@
+# shellcheck shell=bash
+
 assert_fails() {
   if (
     "$@"
@@ -38,8 +40,8 @@ test_make_test_home_exports_isolated_xdg_directories() {
   make_test_home
 
   case "${HOME}" in
-    "${TEST_TMPDIR}"/*) ;;
-    *) fail "HOME was not isolated under TEST_TMPDIR" ;;
+  "${TEST_TMPDIR}"/*) ;;
+  *) fail "HOME was not isolated under TEST_TMPDIR" ;;
   esac
 
   assert_dir "${HOME}"
@@ -68,8 +70,8 @@ test_run_sh_accepts_suite_names_with_spaces() {
   trap - EXIT HUP INT TERM
 
   case "${output}" in
-    *"ok "*"space_safe_arguments"*) ;;
-    *) fail "space suite output did not include the test name: ${output}" ;;
+  *"ok "*"space_safe_arguments"*) ;;
+  *) fail "space suite output did not include the test name: ${output}" ;;
   esac
 }
 
@@ -90,8 +92,8 @@ test_run_sh_returns_nonzero_for_failed_assertions() {
   rm -f "${suite_file}"
   trap - EXIT HUP INT TERM
   case "${output}" in
-    *"not ok "*"intentional_failure"*"# summary: 0 passed, 1 failed"*) ;;
-    *) fail "failure output was not TAP-like: ${output}" ;;
+  *"not ok "*"intentional_failure"*"# summary: 0 passed, 1 failed"*) ;;
+  *) fail "failure output was not TAP-like: ${output}" ;;
   esac
 }
 
@@ -101,8 +103,8 @@ test_run_sh_rejects_traversal_suite_names() {
   fi
 
   case "${output}" in
-    *"invalid suite name"*"../harness"*) ;;
-    *) fail "traversal rejection was unclear: ${output}" ;;
+  *"invalid suite name"*"../harness"*) ;;
+  *) fail "traversal rejection was unclear: ${output}" ;;
   esac
 }
 
@@ -114,16 +116,16 @@ test_run_sh_rejects_control_whitespace_suite_names() {
     fail "runner accepted a tab in a suite name"
   fi
   case "${output}" in
-    *"invalid suite name"*) ;;
-    *) fail "tab rejection was unclear: ${output}" ;;
+  *"invalid suite name"*) ;;
+  *) fail "tab rejection was unclear: ${output}" ;;
   esac
 
   if output="$(bash "${TEST_ROOT}/run.sh" "${newline_suite}" 2>&1)"; then
     fail "runner accepted a newline in a suite name"
   fi
   case "${output}" in
-    *"invalid suite name"*) ;;
-    *) fail "newline rejection was unclear: ${output}" ;;
+  *"invalid suite name"*) ;;
+  *) fail "newline rejection was unclear: ${output}" ;;
   esac
 }
 
@@ -143,8 +145,8 @@ test_run_sh_ignores_caller_controlled_tests_dir() {
     fail "outside suite marker was created"
   fi
   case "${output}" in
-    *"missing suite: outside"*) ;;
-    *) fail "outside suite rejection was unclear: ${output}" ;;
+  *"missing suite: outside"*) ;;
+  *) fail "outside suite rejection was unclear: ${output}" ;;
   esac
 }
 
@@ -170,8 +172,8 @@ test_run_sh_rejects_suite_symlink_outside_test_root() {
     fail "symlinked outside suite marker was created"
   fi
   case "${output}" in
-    *"outside test root"*) ;;
-    *) fail "symlink rejection was unclear: ${output}" ;;
+  *"outside test root"*) ;;
+  *) fail "symlink rejection was unclear: ${output}" ;;
   esac
 }
 
@@ -179,6 +181,7 @@ test_make_test_home_cleans_up_after_child_exit() {
   marker_file="${TEST_TMPDIR}/home-path"
 
   (
+    # shellcheck source=tests/assert.sh
     . "${TEST_ROOT}/assert.sh"
     TEST_TMPDIR="${TEST_TMPDIR}/cleanup child"
     mkdir -p "${TEST_TMPDIR}"

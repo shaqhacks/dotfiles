@@ -1,7 +1,10 @@
+# shellcheck shell=bash
+# shellcheck disable=SC2016
+
 ZSH_BIN="${ZSH_BIN:-zsh}"
 
 zsh_repo_root() {
-  CDPATH= cd -P -- "${TEST_ROOT}/.." && pwd -P
+  CDPATH='' cd -P -- "${TEST_ROOT}/.." && pwd -P
 }
 
 file_mode() {
@@ -18,7 +21,7 @@ copy_zsh_repo_with_spaces() {
   source_repo="$(zsh_repo_root)" || return 1
   ZSH_TEST_REPO="${TEST_TMPDIR}/repo with spaces"
   mkdir -p "${ZSH_TEST_REPO}" || return 1
-  ZSH_TEST_REPO="$(CDPATH= cd -P -- "${ZSH_TEST_REPO}" && pwd -P)" || return 1
+  ZSH_TEST_REPO="$(CDPATH='' cd -P -- "${ZSH_TEST_REPO}" && pwd -P)" || return 1
   (
     cd "${source_repo}" || exit 1
     tar -cf - zsh system 2>/dev/null
@@ -206,15 +209,15 @@ test_zsh_aliases_are_guarded_by_available_commands() {
 
   output="$(PATH="${fake_bin}:/usr/bin:/bin" run_login_zsh 'alias gs l ll la; print -r -- ${aliases[cls]-missing}; print -r -- ${aliases[pubkey]-missing}')" || return 1
   case "${output}" in
-    *"gs='git status -sb'"* ) ;;
-    *) fail "missing guarded git alias: ${output}" ;;
+  *"gs='git status -sb'"*) ;;
+  *) fail "missing guarded git alias: ${output}" ;;
   esac
   case "${output}" in
-    *"l='gls -lAh --color=auto'"* ) ;;
-    *) fail "missing guarded GNU ls alias: ${output}" ;;
+  *"l='gls -lAh --color=auto'"*) ;;
+  *) fail "missing guarded GNU ls alias: ${output}" ;;
   esac
   case "${output}" in
-    *"clear"*"missing"*) ;;
-    *) fail "unguarded or personal aliases leaked: ${output}" ;;
+  *"clear"*"missing"*) ;;
+  *) fail "unguarded or personal aliases leaked: ${output}" ;;
   esac
 }

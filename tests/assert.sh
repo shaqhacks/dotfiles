@@ -1,3 +1,5 @@
+# shellcheck shell=bash
+
 fail() {
   printf 'not ok - %s\n' "$*" >&2
   return 1
@@ -70,13 +72,13 @@ assert_not_contains() {
 cleanup_test_home() {
   if [ -n "${DOTFILES_TEST_HOME_ROOT:-}" ]; then
     case "${DOTFILES_TEST_HOME_ROOT}" in
-      "${TEST_TMPDIR}"/*)
-        rm -rf "${DOTFILES_TEST_HOME_ROOT}"
-        ;;
-      *)
-        fail "refusing to clean path outside TEST_TMPDIR: ${DOTFILES_TEST_HOME_ROOT}"
-        return 1
-        ;;
+    "${TEST_TMPDIR}"/*)
+      rm -rf "${DOTFILES_TEST_HOME_ROOT}"
+      ;;
+    *)
+      fail "refusing to clean path outside TEST_TMPDIR: ${DOTFILES_TEST_HOME_ROOT}"
+      return 1
+      ;;
     esac
   fi
 }

@@ -39,45 +39,45 @@ detect_platform() {
       return 1
     fi
     case "${DOTFILES_TEST_PLATFORM}" in
-      macos|debian)
-        printf '%s\n' "${DOTFILES_TEST_PLATFORM}"
-        return 0
-        ;;
-      *)
-        error "unsupported test platform: ${DOTFILES_TEST_PLATFORM}"
-        return 1
-        ;;
+    macos | debian)
+      printf '%s\n' "${DOTFILES_TEST_PLATFORM}"
+      return 0
+      ;;
+    *)
+      error "unsupported test platform: ${DOTFILES_TEST_PLATFORM}"
+      return 1
+      ;;
     esac
   fi
 
   kernel="$(uname -s)" || return 1
   case "${kernel}" in
-    Darwin)
-      printf 'macos\n'
-      ;;
-    Linux)
-      os_release="$(dotfiles_os_release_path)"
-      if [ ! -f "${os_release}" ]; then
-        error "missing os-release: ${os_release}"
-        return 1
-      fi
-      os_id="$(sed -n 's/^ID=//p' "${os_release}" | sed -n '1p')"
-      os_id="${os_id#\"}"
-      os_id="${os_id%\"}"
-      case "${os_id}" in
-        debian|ubuntu)
-          printf 'debian\n'
-          ;;
-        *)
-          error "unsupported Linux distribution: ${os_id}"
-          return 1
-          ;;
-      esac
+  Darwin)
+    printf 'macos\n'
+    ;;
+  Linux)
+    os_release="$(dotfiles_os_release_path)"
+    if [ ! -f "${os_release}" ]; then
+      error "missing os-release: ${os_release}"
+      return 1
+    fi
+    os_id="$(sed -n 's/^ID=//p' "${os_release}" | sed -n '1p')"
+    os_id="${os_id#\"}"
+    os_id="${os_id%\"}"
+    case "${os_id}" in
+    debian | ubuntu)
+      printf 'debian\n'
       ;;
     *)
-      error "unsupported system: ${kernel}"
+      error "unsupported Linux distribution: ${os_id}"
       return 1
       ;;
+    esac
+    ;;
+  *)
+    error "unsupported system: ${kernel}"
+    return 1
+    ;;
   esac
 }
 
@@ -85,19 +85,19 @@ platform_zsh_path() {
   platform="$1"
 
   case "${platform}" in
-    macos)
-      zsh_path="/bin/zsh"
-      ;;
-    debian)
-      zsh_path="$(command -v zsh 2>/dev/null)" || {
-        error "zsh is not installed"
-        return 1
-      }
-      ;;
-    *)
-      error "unsupported platform: ${platform}"
+  macos)
+    zsh_path="/bin/zsh"
+    ;;
+  debian)
+    zsh_path="$(command -v zsh 2>/dev/null)" || {
+      error "zsh is not installed"
       return 1
-      ;;
+    }
+    ;;
+  *)
+    error "unsupported platform: ${platform}"
+    return 1
+    ;;
   esac
 
   if ! dotfiles_path_is_executable "${zsh_path}"; then
@@ -119,15 +119,15 @@ macos_package_installed() {
   package_name="$2"
 
   case "${package_kind}" in
-    formula)
-      brew list --formula "${package_name}" >/dev/null 2>&1
-      ;;
-    cask)
-      brew list --cask "${package_name}" >/dev/null 2>&1
-      ;;
-    *)
-      return 1
-      ;;
+  formula)
+    brew list --formula "${package_name}" >/dev/null 2>&1
+    ;;
+  cask)
+    brew list --cask "${package_name}" >/dev/null 2>&1
+    ;;
+  *)
+    return 1
+    ;;
   esac
 }
 
@@ -168,12 +168,12 @@ macos_install_package_record() {
   fi
 
   case "${package_kind}" in
-    formula)
-      brew install "${package_name}"
-      ;;
-    cask)
-      brew install --cask "${package_name}"
-      ;;
+  formula)
+    brew install "${package_name}"
+    ;;
+  cask)
+    brew install --cask "${package_name}"
+    ;;
   esac
 }
 
@@ -201,12 +201,12 @@ dotfiles_confirm_run() {
   printf '%s [y/N] ' "${prompt}" >&2
   IFS= read -r answer || return 1
   case "${answer}" in
-    y|Y|yes|YES)
-      return 0
-      ;;
-    *)
-      return 1
-      ;;
+  y | Y | yes | YES)
+    return 0
+    ;;
+  *)
+    return 1
+    ;;
   esac
 }
 

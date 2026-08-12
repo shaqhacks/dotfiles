@@ -68,11 +68,11 @@ setup_confirm() {
 
   if [ "${DOTFILES_TEST_MODE:-0}" = 1 ] && [ -n "${DOTFILES_TEST_INTERACTIVE:-}" ]; then
     case "${DOTFILES_TEST_INTERACTIVE}" in
-      1) ;;
-      *)
-        error "setup requires an interactive terminal"
-        return 1
-        ;;
+    1) ;;
+    *)
+      error "setup requires an interactive terminal"
+      return 1
+      ;;
     esac
     answer="${DOTFILES_TEST_CONFIRM_RESPONSE:-}"
   else
@@ -88,13 +88,13 @@ setup_confirm() {
   fi
 
   case "${answer}" in
-    y|Y|yes|YES)
-      return 0
-      ;;
-    *)
-      error "setup aborted"
-      return 1
-      ;;
+  y | Y | yes | YES)
+    return 0
+    ;;
+  *)
+    error "setup aborted"
+    return 1
+    ;;
   esac
 }
 
@@ -111,42 +111,42 @@ setup_parse_args() {
 
   while [ "$#" -gt 0 ]; do
     case "$1" in
-      --dry-run)
-        if [ "${seen_dry_run}" = 1 ]; then
-          error "duplicate flag: --dry-run"
-          return 2
-        fi
-        seen_dry_run=1
-        SETUP_DRY_RUN=1
-        ;;
-      --skip-packages)
-        if [ "${seen_skip_packages}" = 1 ]; then
-          error "duplicate flag: --skip-packages"
-          return 2
-        fi
-        seen_skip_packages=1
-        SETUP_SKIP_PACKAGES=1
-        ;;
-      --set-default-shell)
-        if [ "${seen_set_default_shell}" = 1 ]; then
-          error "duplicate flag: --set-default-shell"
-          return 2
-        fi
-        seen_set_default_shell=1
-        SETUP_SET_DEFAULT_SHELL=1
-        ;;
-      --help)
-        if [ "${seen_help}" = 1 ]; then
-          error "duplicate flag: --help"
-          return 2
-        fi
-        seen_help=1
-        SETUP_HELP=1
-        ;;
-      *)
-        error "unknown flag: $1"
+    --dry-run)
+      if [ "${seen_dry_run}" = 1 ]; then
+        error "duplicate flag: --dry-run"
         return 2
-        ;;
+      fi
+      seen_dry_run=1
+      SETUP_DRY_RUN=1
+      ;;
+    --skip-packages)
+      if [ "${seen_skip_packages}" = 1 ]; then
+        error "duplicate flag: --skip-packages"
+        return 2
+      fi
+      seen_skip_packages=1
+      SETUP_SKIP_PACKAGES=1
+      ;;
+    --set-default-shell)
+      if [ "${seen_set_default_shell}" = 1 ]; then
+        error "duplicate flag: --set-default-shell"
+        return 2
+      fi
+      seen_set_default_shell=1
+      SETUP_SET_DEFAULT_SHELL=1
+      ;;
+    --help)
+      if [ "${seen_help}" = 1 ]; then
+        error "duplicate flag: --help"
+        return 2
+      fi
+      seen_help=1
+      SETUP_HELP=1
+      ;;
+    *)
+      error "unknown flag: $1"
+      return 2
+      ;;
     esac
     shift
   done
@@ -154,19 +154,19 @@ setup_parse_args() {
 
 setup_plan_packages() {
   case "${SETUP_PLATFORM}" in
-    debian)
-      debian_plan_packages "${SETUP_ROOT}/manifest/packages.debian"
-      ;;
-    macos)
-      if ! macos_have_homebrew; then
-        plan_append packages install-homebrew "homebrew"
-      fi
-      macos_plan_packages "${SETUP_ROOT}/manifest/packages.macos"
-      ;;
-    *)
-      error "unsupported platform: ${SETUP_PLATFORM}"
-      return 1
-      ;;
+  debian)
+    debian_plan_packages "${SETUP_ROOT}/manifest/packages.debian"
+    ;;
+  macos)
+    if ! macos_have_homebrew; then
+      plan_append packages install-homebrew "homebrew"
+    fi
+    macos_plan_packages "${SETUP_ROOT}/manifest/packages.macos"
+    ;;
+  *)
+    error "unsupported platform: ${SETUP_PLATFORM}"
+    return 1
+    ;;
   esac
 }
 
@@ -176,36 +176,36 @@ setup_apply_packages() {
   fi
 
   case "${SETUP_PLATFORM}" in
-    debian)
-      debian_install_packages "${SETUP_ROOT}/manifest/packages.debian"
-      ;;
-    macos)
-      if setup_plan_has packages install-homebrew; then
-        DOTFILES_ASSUME_YES=1 macos_ensure_homebrew || return "$?"
-      fi
-      macos_install_packages "${SETUP_ROOT}/manifest/packages.macos"
-      ;;
-    *)
-      error "unsupported platform: ${SETUP_PLATFORM}"
-      return 1
-      ;;
+  debian)
+    debian_install_packages "${SETUP_ROOT}/manifest/packages.debian"
+    ;;
+  macos)
+    if setup_plan_has packages install-homebrew; then
+      DOTFILES_ASSUME_YES=1 macos_ensure_homebrew || return "$?"
+    fi
+    macos_install_packages "${SETUP_ROOT}/manifest/packages.macos"
+    ;;
+  *)
+    error "unsupported platform: ${SETUP_PLATFORM}"
+    return 1
+    ;;
   esac
 }
 
 setup_apply_fonts() {
   case "${SETUP_PLATFORM}" in
-    macos)
-      return 0
-      ;;
-    debian)
-      if setup_plan_has fonts install; then
-        font_install_linux "${SETUP_ROOT}/fonts/checksums"
-      fi
-      ;;
-    *)
-      error "unsupported platform: ${SETUP_PLATFORM}"
-      return 1
-      ;;
+  macos)
+    return 0
+    ;;
+  debian)
+    if setup_plan_has fonts install; then
+      font_install_linux "${SETUP_ROOT}/fonts/checksums"
+    fi
+    ;;
+  *)
+    error "unsupported platform: ${SETUP_PLATFORM}"
+    return 1
+    ;;
   esac
 }
 

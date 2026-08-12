@@ -5,9 +5,10 @@ set -u
 LC_ALL=C
 export LC_ALL
 
-TEST_ROOT="$(CDPATH= cd -P -- "$(dirname -- "$0")" && pwd -P)"
+TEST_ROOT="$(CDPATH='' cd -P -- "$(dirname -- "$0")" && pwd -P)"
 export TEST_ROOT
 
+# shellcheck source=tests/assert.sh
 . "${TEST_ROOT}/assert.sh"
 
 total=0
@@ -27,11 +28,11 @@ add_suite() {
   suite_name="$1"
 
   case "${suite_name}" in
-    ""|*/*|*..*|*[![:print:]]*)
-      printf 'not ok - invalid suite name: %s\n' "${suite_name}" >&2
-      failed=$((failed + 1))
-      return 1
-      ;;
+  "" | */* | *..* | *[![:print:]]*)
+    printf 'not ok - invalid suite name: %s\n' "${suite_name}" >&2
+    failed=$((failed + 1))
+    return 1
+    ;;
   esac
 
   suite_file="${TEST_ROOT}/${suite_name}_test.sh"
@@ -48,7 +49,7 @@ add_suite() {
 
 validate_suite_file() {
   suite_file="$1"
-  suite_dir="$(CDPATH= cd -P -- "$(dirname -- "${suite_file}")" && pwd -P)" || return 1
+  suite_dir="$(CDPATH='' cd -P -- "$(dirname -- "${suite_file}")" && pwd -P)" || return 1
   suite_base="$(basename -- "${suite_file}")"
 
   if [ "${suite_dir}" != "${TEST_ROOT}" ]; then
@@ -58,12 +59,12 @@ validate_suite_file() {
   fi
 
   case "${suite_base}" in
-    *_test.sh) ;;
-    *)
-      printf 'not ok - invalid test file: %s\n' "${suite_file}" >&2
-      failed=$((failed + 1))
-      return 1
-      ;;
+  *_test.sh) ;;
+  *)
+    printf 'not ok - invalid test file: %s\n' "${suite_file}" >&2
+    failed=$((failed + 1))
+    return 1
+    ;;
   esac
 
   if [ -L "${suite_file}" ]; then
@@ -108,7 +109,9 @@ run_one_test() {
   (
     TEST_TMPDIR="${test_tmpdir}"
     export TEST_TMPDIR
+    # shellcheck source=tests/assert.sh
     . "${TEST_ROOT}/assert.sh"
+    # shellcheck disable=SC1090
     . "${suite_file}"
     "${test_name}"
   )

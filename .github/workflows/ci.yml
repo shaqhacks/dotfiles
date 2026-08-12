@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  verify:
+    name: Verify (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install tools on Ubuntu
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shellcheck shfmt
+
+      - name: Install tools on macOS
+        if: runner.os == 'macOS'
+        run: |
+          brew update
+          brew install shellcheck shfmt
+
+      - name: Run shell tests
+        run: bash tests/run.sh
+
+      - name: Run ShellCheck
+        run: shellcheck -x setup.sh script/*.sh tests/*.sh
+
+      - name: Check shell formatting
+        run: shfmt -d setup.sh script tests
+
+      - name: Check diff whitespace
+        run: git diff --check

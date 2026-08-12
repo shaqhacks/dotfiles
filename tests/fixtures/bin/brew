@@ -10,33 +10,33 @@ contains_line() {
 printf 'brew %s\n' "$*" >>"${DOTFILES_STUB_LOG}"
 
 case "$1" in
-  list)
-    case "$2" in
-      --formula)
-        contains_line "${DOTFILES_STUB_BREW_FORMULAS:-}" "$3"
-        exit "$?"
-        ;;
-      --cask)
-        contains_line "${DOTFILES_STUB_BREW_CASKS:-}" "$3"
-        exit "$?"
-        ;;
+list)
+  case "$2" in
+  --formula)
+    contains_line "${DOTFILES_STUB_BREW_FORMULAS:-}" "$3"
+    exit "$?"
+    ;;
+  --cask)
+    contains_line "${DOTFILES_STUB_BREW_CASKS:-}" "$3"
+    exit "$?"
+    ;;
+  esac
+  ;;
+install)
+  case "$2" in
+  --cask)
+    case "${3:-}" in
+    fail) exit 43 ;;
     esac
     ;;
-  install)
-    case "$2" in
-      --cask)
-        case "${3:-}" in
-          fail) exit 43 ;;
-        esac
-        ;;
-      *)
-        case "${2:-}" in
-          fail) exit 43 ;;
-        esac
-        ;;
+  *)
+    case "${2:-}" in
+    fail) exit 43 ;;
     esac
-    exit 0
     ;;
+  esac
+  exit 0
+  ;;
 esac
 
 exit 64

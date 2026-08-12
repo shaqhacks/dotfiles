@@ -3,9 +3,9 @@
 printf 'apt-get %s\n' "$*" >>"${DOTFILES_STUB_LOG}"
 
 case " $* " in
-  *" fail "*)
-    exit 42
-    ;;
+*" fail "*)
+  exit 42
+  ;;
 esac
 
 exit 0

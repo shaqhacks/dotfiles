@@ -1,3 +1,5 @@
+# shellcheck shell=bash
+
 COMMON_SH="${TEST_ROOT}/../script/common.sh"
 
 assert_fails() {
@@ -33,6 +35,7 @@ load_common() {
   fi
 
   # shellcheck source=../script/common.sh
+  # shellcheck disable=SC1091
   . "${COMMON_SH}"
 }
 
@@ -140,8 +143,9 @@ test_manifest_each_rejects_hostile_link_paths_before_callback() {
 test_manifest_each_rejects_hostile_plugin_fields() {
   load_common || return 1
 
+  insecure_url="git"'://github.com/romkatv/powerlevel10k.git'
   write_file "${TEST_TMPDIR}/plugins.conf" \
-    'powerlevel10k|git://github.com/romkatv/powerlevel10k.git|35833ea15f14b71dbcebc7e54c104d8d56ca5268|powerlevel10k.zsh-theme'
+    "powerlevel10k|${insecure_url}|35833ea15f14b71dbcebc7e54c104d8d56ca5268|powerlevel10k.zsh-theme"
   assert_fails manifest_each plugins "${TEST_TMPDIR}/plugins.conf" marker_callback
 
   write_file "${TEST_TMPDIR}/plugins.conf" \
@@ -196,7 +200,7 @@ test_plan_primitives_preserve_order_without_bash4_arrays() {
 
 test_locked_manifests_parse_to_expected_records() {
   load_common || return 1
-  repo_root="$(CDPATH= cd -P -- "${TEST_ROOT}/.." && pwd -P)" || return 1
+  repo_root="$(CDPATH='' cd -P -- "${TEST_ROOT}/.." && pwd -P)" || return 1
 
   : >"${TEST_TMPDIR}/callback-output"
   manifest_each macos "${repo_root}/manifest/packages.macos" collect_callback || return 1

@@ -221,12 +221,12 @@ test_macos_ensure_homebrew_downloads_temp_installer_and_removes_it_after_confirm
 
   plan="$(plan_print)"
   case "${plan}" in
-    *'https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh -> '*)
-      ;;
-    *)
-      fail "Homebrew installer source was not disclosed in plan"
-      return 1
-      ;;
+  *'https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh -> '*)
+    ;;
+  *)
+    fail "Homebrew installer source was not disclosed in plan"
+    return 1
+    ;;
   esac
   installer_path="${plan##* -> }"
   assert_missing "${installer_path}" || return 1

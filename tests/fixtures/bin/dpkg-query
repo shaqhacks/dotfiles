@@ -14,10 +14,10 @@ status_for_package() {
   printf '%s\n' "${list}" |
     while IFS= read -r record; do
       case "${record}" in
-        "${needle}|"*)
-          printf '%s\n' "${record#*|}"
-          exit 0
-          ;;
+      "${needle}|"*)
+        printf '%s\n' "${record#*|}"
+        exit 0
+        ;;
       esac
     done
 }

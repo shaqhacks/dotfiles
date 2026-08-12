@@ -1,3 +1,5 @@
+# shellcheck shell=bash
+
 COMMON_SH="${TEST_ROOT}/../script/common.sh"
 LINKS_SH="${TEST_ROOT}/../script/links.sh"
 
@@ -21,8 +23,10 @@ load_links() {
   fi
 
   # shellcheck source=../script/common.sh
+  # shellcheck disable=SC1091
   . "${COMMON_SH}"
   # shellcheck source=../script/links.sh
+  # shellcheck disable=SC1091
   . "${LINKS_SH}"
 }
 
@@ -54,12 +58,12 @@ apply_links() {
 
 source_path() {
   rel="$1"
-  printf '%s/%s' "$(CDPATH= cd -P -- "${repo_root}" && pwd -P)" "${rel}"
+  printf '%s/%s' "$(CDPATH='' cd -P -- "${repo_root}" && pwd -P)" "${rel}"
 }
 
 home_path() {
   rel="$1"
-  printf '%s/%s' "$(CDPATH= cd -P -- "${HOME}" && pwd -P)" "${rel}"
+  printf '%s/%s' "$(CDPATH='' cd -P -- "${HOME}" && pwd -P)" "${rel}"
 }
 
 test_links_plan_reports_first_installation_actions_without_mutation() {
