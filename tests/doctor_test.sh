@@ -127,6 +127,11 @@ test_doctor_reports_missing_plugin_font_and_link_diagnostics() {
   run_doctor_capture
 
   assert_eq 1 "${doctor_status}" "doctor unhealthy status" || return 1
+  assert_contains "${doctor_out}" "ok platform" || return 1
+  assert_contains "${doctor_out}" "ok packages" || return 1
+  assert_not_contains "${doctor_out}" "ok plugins" || return 1
+  assert_not_contains "${doctor_out}" "ok fonts" || return 1
+  assert_not_contains "${doctor_out}" "ok links" || return 1
   assert_contains "${doctor_err}" "missing plugin: sample" || return 1
   assert_contains "${doctor_err}" "font is not installed: JetBrainsMonoNerdFont" || return 1
   assert_contains "${doctor_err}" "link mismatch: .zshrc"
@@ -143,6 +148,11 @@ test_doctor_reports_bad_plugin_revision_and_wrong_link_target() {
   run_doctor_capture
 
   assert_eq 1 "${doctor_status}" "doctor unhealthy status" || return 1
+  assert_contains "${doctor_out}" "ok platform" || return 1
+  assert_contains "${doctor_out}" "ok packages" || return 1
+  assert_not_contains "${doctor_out}" "ok plugins" || return 1
+  assert_contains "${doctor_out}" "ok fonts" || return 1
+  assert_not_contains "${doctor_out}" "ok links" || return 1
   assert_contains "${doctor_err}" "plugin revision mismatch: sample" || return 1
   assert_contains "${doctor_err}" "link mismatch: .gitconfig"
 }

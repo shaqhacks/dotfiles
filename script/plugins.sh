@@ -203,8 +203,16 @@ plugins_apply_record() {
     return 0
   fi
 
-  git -C "${checkout}" fetch --depth 1 origin "${commit_id}" || return 1
-  git -C "${checkout}" checkout --detach "${commit_id}" || return 1
+  git -C "${checkout}" fetch --depth 1 origin "${commit_id}"
+  status=$?
+  if [ "${status}" -ne 0 ]; then
+    return "${status}"
+  fi
+  git -C "${checkout}" checkout --detach "${commit_id}"
+  status=$?
+  if [ "${status}" -ne 0 ]; then
+    return "${status}"
+  fi
   if [ ! -f "${checkout}/${entrypoint}" ]; then
     error "plugin entrypoint is missing after checkout: ${plugin_name}/${entrypoint}"
     return 1

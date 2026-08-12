@@ -29,6 +29,14 @@ assert_log_contains() {
   assert_contains "${DOTFILES_STUB_LOG}" "${needle}"
 }
 
+assert_status() {
+  expected="$1"
+  actual="$2"
+  message="$3"
+
+  assert_eq "${expected}" "${actual}" "${message}"
+}
+
 write_file() {
   path="$1"
   shift
@@ -246,6 +254,29 @@ test_plugins_apply_updates_changed_pinned_revision() {
   plugins_apply "${manifest}" "${data_root}" || return 1
   assert_eq "1111111111111111111111111111111111111111" "$(cat "${data_root}/plugins/sample/.git/commit")" "updated commit" || return 1
   assert_log_contains "git -C ${data_root}/plugins/sample fetch --depth 1 origin 1111111111111111111111111111111111111111"
+}
+
+test_plugins_apply_update_preserves_fetch_and_checkout_failure_status() {
+  load_dependencies || return 1
+  setup_dependency_stubs || return 1
+  manifest="$(plugin_manifest)"
+  data_root="${TEST_TMPDIR}/data"
+  make_plugin_checkout "${data_root}/plugins/sample" "https://example.invalid/sample.git" "2222222222222222222222222222222222222222" || return 1
+  DOTFILES_STUB_GIT_FETCH_FAIL=1
+  export DOTFILES_STUB_GIT_FETCH_FAIL
+
+  plugins_apply "${manifest}" "${data_root}" >/dev/null 2>&1
+  status=$?
+  assert_status 47 "${status}" "plugin update fetch failure status" || return 1
+  assert_eq "2222222222222222222222222222222222222222" "$(cat "${data_root}/plugins/sample/.git/commit")" "commit after failed fetch" || return 1
+
+  unset DOTFILES_STUB_GIT_FETCH_FAIL
+  DOTFILES_STUB_GIT_CHECKOUT_FAIL=1
+  export DOTFILES_STUB_GIT_CHECKOUT_FAIL
+  plugins_apply "${manifest}" "${data_root}" >/dev/null 2>&1
+  status=$?
+  assert_status 48 "${status}" "plugin update checkout failure status" || return 1
+  assert_eq "2222222222222222222222222222222222222222" "$(cat "${data_root}/plugins/sample/.git/commit")" "commit after failed checkout"
 }
 
 test_plugins_apply_rejects_mismatched_origin() {

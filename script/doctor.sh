@@ -19,11 +19,30 @@ doctor_data_root() {
 
 doctor_fail() {
   DOCTOR_STATUS=1
+  DOCTOR_SECTION_STATUS=1
   error "$@"
 }
 
 doctor_ok() {
   printf 'ok %s\n' "$1"
+}
+
+doctor_run_section() {
+  section_name="$1"
+  shift
+
+  DOCTOR_SECTION_STATUS=0
+  "$@"
+  section_command_status=$?
+  if [ "${section_command_status}" -ne 0 ] || [ "${DOCTOR_SECTION_STATUS}" -ne 0 ]; then
+    DOCTOR_STATUS=1
+    return 1
+  fi
+  doctor_ok "${section_name}"
+}
+
+doctor_check_platform() {
+  platform_zsh_path "${DOCTOR_PLATFORM}" >/dev/null
 }
 
 doctor_check_package_debian() {
@@ -178,19 +197,15 @@ doctor_main() {
 
   doctor_load_helpers "${DOCTOR_ROOT}" || return "$?"
   DOCTOR_STATUS=0
+  DOCTOR_SECTION_STATUS=0
   DOCTOR_DATA_ROOT="$(doctor_data_root)" || return "$?"
   DOCTOR_PLATFORM="$(detect_platform)" || return "$?"
-  platform_zsh_path "${DOCTOR_PLATFORM}" >/dev/null || DOCTOR_STATUS=1
-  doctor_ok platform
 
-  doctor_check_packages || DOCTOR_STATUS=1
-  doctor_ok packages
-  doctor_check_plugins || DOCTOR_STATUS=1
-  doctor_ok plugins
-  doctor_check_fonts || DOCTOR_STATUS=1
-  doctor_ok fonts
-  doctor_check_links || DOCTOR_STATUS=1
-  doctor_ok links
+  doctor_run_section platform doctor_check_platform || :
+  doctor_run_section packages doctor_check_packages || :
+  doctor_run_section plugins doctor_check_plugins || :
+  doctor_run_section fonts doctor_check_fonts || :
+  doctor_run_section links doctor_check_links || :
 
   return "${DOCTOR_STATUS}"
 }

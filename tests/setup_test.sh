@@ -101,6 +101,13 @@ setup_environment() {
   write_file "${XDG_DATA_HOME}/fonts/JetBrainsMonoNerdFont/.version" "v3.5.0"
 }
 
+make_setup_plugin_checkout() {
+  mkdir -p "${XDG_DATA_HOME}/dotfiles/plugins/sample/.git" || return 1
+  write_file "${XDG_DATA_HOME}/dotfiles/plugins/sample/.git/origin" "https://example.invalid/sample.git" || return 1
+  write_file "${XDG_DATA_HOME}/dotfiles/plugins/sample/.git/commit" "2222222222222222222222222222222222222222" || return 1
+  write_file "${XDG_DATA_HOME}/dotfiles/plugins/sample/sample.plugin.zsh" "plugin"
+}
+
 run_setup_capture() {
   setup_out="${TEST_TMPDIR}/setup.out"
   setup_err="${TEST_TMPDIR}/setup.err"
@@ -242,6 +249,31 @@ test_setup_plugin_failure_preserves_status_and_happens_before_links() {
 
   assert_status 46 "${setup_status}" "plugin failure status" || return 1
   assert_log_count "git clone https://example.invalid/sample.git" 1 || return 1
+  assert_missing "${HOME}/.zshrc"
+}
+
+test_setup_plugin_update_failures_preserve_status_and_happen_before_links() {
+  make_setup_repo || return 1
+  setup_environment || return 1
+  make_setup_plugin_checkout || return 1
+  DOTFILES_STUB_GIT_FETCH_FAIL=1
+  export DOTFILES_STUB_GIT_FETCH_FAIL
+
+  run_setup_capture --skip-packages
+  assert_status 47 "${setup_status}" "plugin update fetch failure status" || return 1
+  assert_missing "${HOME}/.zshrc" || return 1
+
+  unset DOTFILES_STUB_GIT_FETCH_FAIL
+  make_test_home || return 1
+  mkdir -p "${XDG_DATA_HOME}/fonts/JetBrainsMonoNerdFont" || return 1
+  write_file "${XDG_DATA_HOME}/fonts/JetBrainsMonoNerdFont/JetBrainsMonoNerdFont-Regular.ttf" "font" || return 1
+  write_file "${XDG_DATA_HOME}/fonts/JetBrainsMonoNerdFont/.version" "v3.5.0" || return 1
+  make_setup_plugin_checkout || return 1
+  DOTFILES_STUB_GIT_CHECKOUT_FAIL=1
+  export DOTFILES_STUB_GIT_CHECKOUT_FAIL
+
+  run_setup_capture --skip-packages
+  assert_status 48 "${setup_status}" "plugin update checkout failure status" || return 1
   assert_missing "${HOME}/.zshrc"
 }
 
