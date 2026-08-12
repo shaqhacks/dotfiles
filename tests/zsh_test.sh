@@ -4,6 +4,16 @@ zsh_repo_root() {
   CDPATH= cd -P -- "${TEST_ROOT}/.." && pwd -P
 }
 
+file_mode() {
+  path="$1"
+
+  if stat -c %a -- "${path}" >/dev/null 2>&1; then
+    stat -c %a -- "${path}"
+  else
+    stat -f %Lp -- "${path}"
+  fi
+}
+
 copy_zsh_repo_with_spaces() {
   source_repo="$(zsh_repo_root)" || return 1
   ZSH_TEST_REPO="${TEST_TMPDIR}/repo with spaces"
@@ -121,9 +131,28 @@ test_zsh_path_setup_is_duplicate_free_and_portable() {
 test_zsh_history_parent_is_secure_xdg_state_directory() {
   prepare_zsh_home || return 1
 
-  output="$(run_login_zsh 'print -r -- "$HISTFILE"; print -r -- ${options[appendhistory]}:${options[sharehistory]}:${options[histignorealldups]}:${options[histreduceblanks]}:${options[extendedhistory]}; print -r -- "$(stat -f %Lp -- "${HISTFILE:h}")"')" || return 1
-  expected="$(printf '%s\n%s\n%s' "${XDG_STATE_HOME}/zsh/history" "on:on:on:on:on" "700")"
+  output="$(run_login_zsh 'print -r -- "$HISTFILE"; print -r -- ${options[appendhistory]}:${options[sharehistory]}:${options[histignorealldups]}:${options[histreduceblanks]}:${options[extendedhistory]}')" || return 1
+  mode="$(file_mode "${XDG_STATE_HOME}/zsh")" || return 1
+  expected="$(printf '%s\n%s' "${XDG_STATE_HOME}/zsh/history" "on:on:on:on:on")"
   assert_eq "${expected}" "${output}" "history file, options, and parent mode"
+  assert_eq "700" "${mode}" "history parent mode"
+}
+
+test_zsh_insecure_history_parent_warns_and_disables_persistence() {
+  prepare_zsh_home || return 1
+  mkdir -p "${XDG_STATE_HOME}/zsh" || return 1
+  chmod 777 "${XDG_STATE_HOME}/zsh" || return 1
+
+  fake_bin="${TEST_TMPDIR}/fake-bin"
+  mkdir -p "${fake_bin}" || return 1
+  printf '%s\n' '#!/usr/bin/env bash' 'exit 1' >"${fake_bin}/chmod"
+  chmod +x "${fake_bin}/chmod" || return 1
+  err_file="${TEST_TMPDIR}/zsh-stderr"
+
+  output="$(PATH="${fake_bin}:/usr/bin:/bin" run_login_zsh 'print -r -- shell-usable; print -r -- "${HISTFILE-unset}:${SAVEHIST}:${options[appendhistory]}:${options[sharehistory]}"' 2>"${err_file}")" || return 1
+  expected="$(printf '%s\n%s' "shell-usable" ":0:off:off")"
+  assert_eq "${expected}" "${output}" "insecure history disables persistence"
+  assert_contains "${err_file}" "dotfiles: insecure history directory"
 }
 
 test_zsh_completion_uses_xdg_cache_location() {
