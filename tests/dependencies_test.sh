@@ -83,6 +83,7 @@ setup_dependency_stubs() {
     '    url="$2"; dest="$3"' \
     '    if [ "${DOTFILES_STUB_GIT_CLONE_FAIL:-0}" = 1 ]; then exit 46; fi' \
     '    mkdir -p "${dest}/.git" || exit 1' \
+    '    if [ "${DOTFILES_STUB_GIT_TERM_AFTER_TEMP:-0}" = 1 ]; then kill -TERM "${PPID}"; sleep 1; exit 143; fi' \
     '    printf "%s\n" "${url}" >"${dest}/.git/origin"' \
     '    printf "%s\n" "${DOTFILES_STUB_GIT_CLONE_COMMIT:-0000000000000000000000000000000000000000}" >"${dest}/.git/commit"' \
     '    : >"${dest}/.git/clean"' \
@@ -123,17 +124,38 @@ setup_dependency_stubs() {
   write_file "${DOTFILES_STUB_BIN}/unzip" \
     '#!/usr/bin/env bash' \
     'printf "unzip %s\n" "$*" >>"${DOTFILES_STUB_LOG}"' \
+    'has_ttf=0' \
+    'has_otf=0' \
+    'for member in ${DOTFILES_STUB_ZIP_MEMBERS:-JetBrainsMonoNerdFont-Regular.ttf}; do' \
+    '  case "${member}" in *.ttf) has_ttf=1 ;; *.otf) has_otf=1 ;; esac' \
+    'done' \
     'case "${1:-}" in' \
     '  -Z1)' \
     '    printf "%s\n" ${DOTFILES_STUB_ZIP_MEMBERS:-JetBrainsMonoNerdFont-Regular.ttf}' \
     '    ;;' \
     '  *)' \
+    '    archive="$1"; shift' \
     '    dest=""' \
-    '    while [ "$#" -gt 0 ]; do case "$1" in -d) shift; dest="$1" ;; esac; shift; done' \
+    '    patterns=""' \
+    '    while [ "$#" -gt 0 ]; do' \
+    '      case "$1" in' \
+    '        -d) shift; dest="$1" ;;' \
+    '        *.ttf) [ "${has_ttf}" = 1 ] || exit 51; patterns="${patterns} $1" ;;' \
+    '        *.otf) [ "${has_otf}" = 1 ] || exit 51; patterns="${patterns} $1" ;;' \
+    '        *) patterns="${patterns} $1" ;;' \
+    '      esac' \
+    '      shift' \
+    '    done' \
+    '    [ -n "${archive}" ] || exit 64' \
     '    [ -n "${dest}" ] || exit 64' \
     '    mkdir -p "${dest}" || exit 1' \
     '    for member in ${DOTFILES_STUB_ZIP_MEMBERS:-JetBrainsMonoNerdFont-Regular.ttf}; do' \
-    '      case "${member}" in *.ttf|*.otf) printf "font\n" >"${dest}/$(basename -- "${member}")" ;; esac' \
+    '      case "${member}" in *.ttf|*.otf)' \
+    '        for pattern in ${patterns}; do' \
+    '          case "${pattern}:${member}" in *.ttf:*.ttf|*.otf:*.otf|"${member}:${member}") printf "font\n" >"${dest}/$(basename -- "${member}")" ;; esac' \
+    '        done' \
+    '        ;;' \
+    '      esac' \
     '    done' \
     '    ;;' \
     'esac'
@@ -265,6 +287,30 @@ test_plugins_apply_removes_temp_clone_after_failure() {
   fi
 }
 
+test_plugins_apply_removes_temp_clone_after_term_signal() {
+  load_dependencies || return 1
+  setup_dependency_stubs || return 1
+  manifest="$(plugin_manifest)"
+  data_root="${TEST_TMPDIR}/data"
+  DOTFILES_STUB_GIT_TERM_AFTER_TEMP=1
+  export DOTFILES_STUB_GIT_TERM_AFTER_TEMP
+
+  (
+    plugins_apply "${manifest}" "${data_root}"
+  ) >/dev/null 2>&1
+  status=$?
+  if [ "${status}" -eq 0 ]; then
+    fail "plugins_apply succeeded after simulated TERM"
+    return 1
+  fi
+
+  assert_missing "${data_root}/plugins/sample" || return 1
+  if find "${data_root}/plugins" -name '.sample.tmp.*' -print 2>/dev/null | grep . >/dev/null 2>&1; then
+    fail "temporary clone was left behind after TERM"
+    return 1
+  fi
+}
+
 test_plugins_plan_rejects_manifest_with_malformed_entrypoint() {
   load_dependencies || return 1
   setup_dependency_stubs || return 1
@@ -349,6 +395,32 @@ test_font_install_linux_installs_fonts_and_refreshes_cache() {
   assert_missing "${XDG_DATA_HOME}/fonts/JetBrainsMonoNerdFont/README.md" || return 1
   assert_eq "v3.5.0" "$(cat "${XDG_DATA_HOME}/fonts/JetBrainsMonoNerdFont/.version")" "font version marker" || return 1
   assert_log_contains "fc-cache -f ${XDG_DATA_HOME}/fonts/JetBrainsMonoNerdFont"
+}
+
+test_font_install_linux_installs_ttf_only_archive() {
+  load_dependencies || return 1
+  setup_dependency_stubs || return 1
+  make_test_home
+  metadata="$(font_metadata "$(archive_checksum)")"
+  DOTFILES_STUB_ZIP_MEMBERS='JetBrainsMonoNerdFont-Regular.ttf'
+  export DOTFILES_STUB_ZIP_MEMBERS
+
+  font_install_linux "${metadata}" || return 1
+
+  assert_file "${XDG_DATA_HOME}/fonts/JetBrainsMonoNerdFont/JetBrainsMonoNerdFont-Regular.ttf"
+}
+
+test_font_install_linux_installs_otf_only_archive() {
+  load_dependencies || return 1
+  setup_dependency_stubs || return 1
+  make_test_home
+  metadata="$(font_metadata "$(archive_checksum)")"
+  DOTFILES_STUB_ZIP_MEMBERS='JetBrainsMonoNerdFont-Regular.otf'
+  export DOTFILES_STUB_ZIP_MEMBERS
+
+  font_install_linux "${metadata}" || return 1
+
+  assert_file "${XDG_DATA_HOME}/fonts/JetBrainsMonoNerdFont/JetBrainsMonoNerdFont-Regular.otf"
 }
 
 test_font_install_linux_propagates_cache_refresh_failure() {

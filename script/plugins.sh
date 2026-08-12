@@ -91,6 +91,17 @@ plugins_cleanup_temp() {
   fi
 }
 
+plugins_clear_temp_traps() {
+  trap - HUP INT TERM RETURN
+}
+
+plugins_abort_temp_signal() {
+  plugins_cleanup_temp
+  PLUGINS_TEMP_CHECKOUT=""
+  plugins_clear_temp_traps
+  exit 130
+}
+
 plugins_clone_record() {
   plugin_name="$1"
   plugin_url="$2"
@@ -106,21 +117,22 @@ plugins_clone_record() {
   mkdir -p "${plugins_dir}" || return 1
   PLUGINS_TEMP_CHECKOUT="$(mktemp -d "${plugins_dir}/.${plugin_name}.tmp.XXXXXX")" || return 1
   trap plugins_cleanup_temp RETURN
+  trap plugins_abort_temp_signal HUP INT TERM
 
   git clone "${plugin_url}" "${PLUGINS_TEMP_CHECKOUT}" || {
-    trap - RETURN
+    plugins_clear_temp_traps
     plugins_cleanup_temp
     PLUGINS_TEMP_CHECKOUT=""
     return 1
   }
   git -C "${PLUGINS_TEMP_CHECKOUT}" fetch --depth 1 origin "${commit_id}" || {
-    trap - RETURN
+    plugins_clear_temp_traps
     plugins_cleanup_temp
     PLUGINS_TEMP_CHECKOUT=""
     return 1
   }
   git -C "${PLUGINS_TEMP_CHECKOUT}" checkout --detach "${commit_id}" || {
-    trap - RETURN
+    plugins_clear_temp_traps
     plugins_cleanup_temp
     PLUGINS_TEMP_CHECKOUT=""
     return 1
@@ -128,20 +140,20 @@ plugins_clone_record() {
 
   if [ ! -f "${PLUGINS_TEMP_CHECKOUT}/${entrypoint}" ]; then
     error "plugin entrypoint is missing after clone: ${plugin_name}/${entrypoint}"
-    trap - RETURN
+    plugins_clear_temp_traps
     plugins_cleanup_temp
     PLUGINS_TEMP_CHECKOUT=""
     return 1
   fi
 
   mv "${PLUGINS_TEMP_CHECKOUT}" "${checkout}" || {
-    trap - RETURN
+    plugins_clear_temp_traps
     plugins_cleanup_temp
     PLUGINS_TEMP_CHECKOUT=""
     return 1
   }
   PLUGINS_TEMP_CHECKOUT=""
-  trap - RETURN
+  plugins_clear_temp_traps
 }
 
 plugins_apply_record() {

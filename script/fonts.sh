@@ -183,7 +183,12 @@ font_archive_has_font_suffix() {
 
 font_validate_archive_members() {
   archive="$1"
-  font_member_count=0
+  FONT_ARCHIVE_MEMBERS="$(mktemp "${TMPDIR:-/tmp}/dotfiles-font-members.XXXXXX")" || return 1
+  : >"${FONT_ARCHIVE_MEMBERS}" || {
+    rm -f "${FONT_ARCHIVE_MEMBERS}"
+    FONT_ARCHIVE_MEMBERS=""
+    return 1
+  }
 
   unzip -Z1 "${archive}" |
     while IFS= read -r member || [ -n "${member}" ]; do
@@ -192,16 +197,20 @@ font_validate_archive_members() {
         exit 2
       }
       if font_archive_has_font_suffix "${member}"; then
-        font_member_count=$((font_member_count + 1))
+        printf '%s\n' "${member}" >>"${FONT_ARCHIVE_MEMBERS}" || exit 1
       fi
     done
   status=$?
   if [ "${status}" -ne 0 ]; then
+    rm -f "${FONT_ARCHIVE_MEMBERS}"
+    FONT_ARCHIVE_MEMBERS=""
     return 1
   fi
 
-  if ! unzip -Z1 "${archive}" | grep -E '\.(ttf|otf)$' >/dev/null 2>&1; then
+  if [ ! -s "${FONT_ARCHIVE_MEMBERS}" ]; then
     error "font archive contains no font files"
+    rm -f "${FONT_ARCHIVE_MEMBERS}"
+    FONT_ARCHIVE_MEMBERS=""
     return 1
   fi
 }
@@ -219,6 +228,18 @@ font_cleanup_temp() {
   if [ -n "${FONT_TEMP_DIR:-}" ]; then
     rm -rf "${FONT_TEMP_DIR}"
   fi
+  if [ -n "${FONT_ARCHIVE_MEMBERS:-}" ]; then
+    rm -f "${FONT_ARCHIVE_MEMBERS}"
+  fi
+}
+
+font_extract_members() {
+  archive="$1"
+  extract_dir="$2"
+
+  while IFS= read -r member || [ -n "${member}" ]; do
+    unzip -q "${archive}" "${member}" -d "${extract_dir}" || return 1
+  done <"${FONT_ARCHIVE_MEMBERS}"
 }
 
 font_install_linux() {
@@ -269,11 +290,12 @@ font_install_linux() {
     return 1
   }
 
-  unzip -q "${FONT_TEMP_ARCHIVE}" '*.ttf' '*.otf' -d "${FONT_TEMP_DIR}" || {
+  font_extract_members "${FONT_TEMP_ARCHIVE}" "${FONT_TEMP_DIR}" || {
     trap - RETURN
     font_cleanup_temp
     FONT_TEMP_ARCHIVE=""
     FONT_TEMP_DIR=""
+    FONT_ARCHIVE_MEMBERS=""
     return 1
   }
 
@@ -282,6 +304,7 @@ font_install_linux() {
     font_cleanup_temp
     FONT_TEMP_ARCHIVE=""
     FONT_TEMP_DIR=""
+    FONT_ARCHIVE_MEMBERS=""
     return 1
   }
   mkdir -p "${install_dir}" || {
@@ -289,6 +312,7 @@ font_install_linux() {
     font_cleanup_temp
     FONT_TEMP_ARCHIVE=""
     FONT_TEMP_DIR=""
+    FONT_ARCHIVE_MEMBERS=""
     return 1
   }
   find "${FONT_TEMP_DIR}" \( -name '*.ttf' -o -name '*.otf' \) -type f -exec cp {} "${install_dir}/" \; || {
@@ -296,6 +320,7 @@ font_install_linux() {
     font_cleanup_temp
     FONT_TEMP_ARCHIVE=""
     FONT_TEMP_DIR=""
+    FONT_ARCHIVE_MEMBERS=""
     return 1
   }
   printf '%s\n' "${FONT_VERSION}" >"${install_dir}/.version" || {
@@ -303,6 +328,7 @@ font_install_linux() {
     font_cleanup_temp
     FONT_TEMP_ARCHIVE=""
     FONT_TEMP_DIR=""
+    FONT_ARCHIVE_MEMBERS=""
     return 1
   }
 
@@ -311,6 +337,7 @@ font_install_linux() {
     font_cleanup_temp
     FONT_TEMP_ARCHIVE=""
     FONT_TEMP_DIR=""
+    FONT_ARCHIVE_MEMBERS=""
     return 1
   }
 
@@ -318,4 +345,5 @@ font_install_linux() {
   font_cleanup_temp
   FONT_TEMP_ARCHIVE=""
   FONT_TEMP_DIR=""
+  FONT_ARCHIVE_MEMBERS=""
 }
