@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
 
 printf 'chsh %s\n' "$*" >>"${DOTFILES_STUB_LOG}"
-exit 95
+if [ "${DOTFILES_STUB_CHSH_FAIL:-0}" = 1 ]; then
+  exit 95
+fi

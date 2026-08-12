@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+
+printf 'unzip %s\n' "$*" >>"${DOTFILES_STUB_LOG}"
+
+case "${1:-}" in
+  -Z1)
+    printf '%s\n' ${DOTFILES_STUB_ZIP_MEMBERS:-JetBrainsMonoNerdFont-Regular.ttf}
+    ;;
+  *)
+    archive="$1"
+    shift
+    dest=""
+    while [ "$#" -gt 0 ]; do
+      case "$1" in
+        -d)
+          shift
+          dest="$1"
+          ;;
+      esac
+      shift
+    done
+    [ -n "${archive}" ] || exit 64
+    [ -n "${dest}" ] || exit 64
+    mkdir -p "${dest}" || exit 1
+    for member in ${DOTFILES_STUB_ZIP_MEMBERS:-JetBrainsMonoNerdFont-Regular.ttf}; do
+      case "${member}" in
+        *.ttf|*.otf) printf 'font\n' >"${dest}/$(basename -- "${member}")" || exit 1 ;;
+      esac
+    done
+    ;;
+esac

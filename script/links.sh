@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2094
 
 links_source_path() {
   repo_root="$1"

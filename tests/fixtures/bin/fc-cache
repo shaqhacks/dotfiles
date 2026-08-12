@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+printf 'fc-cache %s\n' "$*" >>"${DOTFILES_STUB_LOG}"
+
+if [ "${DOTFILES_STUB_FC_CACHE_FAIL:-0}" = 1 ]; then
+  exit 50
+fi

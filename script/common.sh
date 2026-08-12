@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2094
 
 manifest_error() {
   manifest_path="$1"
@@ -71,7 +72,7 @@ validate_relative_path() {
 
 canonical_dir() {
   dir_path="$1"
-  CDPATH= cd -P -- "${dir_path}" 2>/dev/null && pwd -P
+  CDPATH='' cd -P -- "${dir_path}" 2>/dev/null && pwd -P
 }
 
 path_is_under() {
@@ -412,10 +413,12 @@ manifest_each() {
       links|macos) "${callback}" "${field1}" "${field2}" ;;
       debian) "${callback}" "${field1}" ;;
       plugins) "${callback}" "${field1}" "${field2}" "${field3}" "${field4}" ;;
-    esac || {
+    esac
+    callback_status=$?
+    if [ "${callback_status}" -ne 0 ]; then
       rm -f "${seen_file}"
-      return 1
-    }
+      return "${callback_status}"
+    fi
   done <"${manifest_path}"
 
   rm -f "${seen_file}"

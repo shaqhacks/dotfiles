@@ -142,24 +142,30 @@ plugins_clone_record() {
   trap plugins_cleanup_temp RETURN
   trap plugins_abort_temp_signal HUP INT TERM
 
-  git clone "${plugin_url}" "${PLUGINS_TEMP_CHECKOUT}" || {
+  git clone "${plugin_url}" "${PLUGINS_TEMP_CHECKOUT}"
+  status=$?
+  if [ "${status}" -ne 0 ]; then
     plugins_restore_temp_traps
     plugins_cleanup_temp
     PLUGINS_TEMP_CHECKOUT=""
-    return 1
-  }
-  git -C "${PLUGINS_TEMP_CHECKOUT}" fetch --depth 1 origin "${commit_id}" || {
+    return "${status}"
+  fi
+  git -C "${PLUGINS_TEMP_CHECKOUT}" fetch --depth 1 origin "${commit_id}"
+  status=$?
+  if [ "${status}" -ne 0 ]; then
     plugins_restore_temp_traps
     plugins_cleanup_temp
     PLUGINS_TEMP_CHECKOUT=""
-    return 1
-  }
-  git -C "${PLUGINS_TEMP_CHECKOUT}" checkout --detach "${commit_id}" || {
+    return "${status}"
+  fi
+  git -C "${PLUGINS_TEMP_CHECKOUT}" checkout --detach "${commit_id}"
+  status=$?
+  if [ "${status}" -ne 0 ]; then
     plugins_restore_temp_traps
     plugins_cleanup_temp
     PLUGINS_TEMP_CHECKOUT=""
-    return 1
-  }
+    return "${status}"
+  fi
 
   if [ ! -f "${PLUGINS_TEMP_CHECKOUT}/${entrypoint}" ]; then
     error "plugin entrypoint is missing after clone: ${plugin_name}/${entrypoint}"
