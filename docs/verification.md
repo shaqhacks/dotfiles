@@ -47,14 +47,18 @@ The existing isolated test suites cover the public CLI setup scenarios without m
 - Hygiene checks reject absolute home paths, private domains, identity fields, common secret formats, unresolved placeholders, broken relative Markdown links, and non-HTTPS remote URLs.
 - Every declared link source exists as a tracked repository file.
 - README usage and public flags match the setup help output and verified command behavior.
-- CI is declared for Ubuntu and macOS with the local test, lint, formatting, and whitespace verification commands.
+- CI is declared for Ubuntu and macOS with the local test, Bash syntax, Zsh syntax, lint, formatting, and whitespace verification commands.
 
 ## Publication Gate
 
-Publishing requires `gh auth status -h github.com` to report an authenticated GitHub session with repository creation permission. Repository creation and push should use the current repository root as the source:
+Publishing requires `gh auth status -h github.com` to report an authenticated GitHub session with repository creation permission. Publish only after the verified implementation branch has been merged to local `main`; create the public repository without pushing a feature branch, then push `main` and verify or set the remote default branch to `main`:
 
 ```bash
-gh repo create shaqhacks/dotfiles --public --source=. --remote=origin --push
+git switch main
+git merge --ff-only feat/portable-dotfiles
+test "$(git branch --show-current)" = main
+gh repo create shaqhacks/dotfiles --public --source=. --remote=origin
+git push -u origin main
+gh repo edit shaqhacks/dotfiles --default-branch main
 gh repo view shaqhacks/dotfiles --json nameWithOwner,visibility,defaultBranchRef,url
-git status --short --branch
 ```

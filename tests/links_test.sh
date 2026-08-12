@@ -259,3 +259,51 @@ test_links_apply_rolls_back_earlier_mutations_after_injected_later_failure() {
   links_rollback "${journal}" || return 1
   links_rollback "${journal}" || return 1
 }
+
+test_links_apply_restores_destination_when_backup_journal_fails_after_move() {
+  load_links || return 1
+  make_test_home
+  make_links_repo || return 1
+  write_file "${links_manifest}" 'zsh/zshrc.symlink|.zshrc'
+  write_file "${HOME}/.zshrc" 'old zsh'
+  backup_root="${TEST_TMPDIR}/backup root"
+  journal="${TEST_TMPDIR}/links journal"
+
+  DOTFILES_LINKS_FAIL_JOURNAL_ON=backup
+  export DOTFILES_LINKS_FAIL_JOURNAL_ON
+  assert_fails apply_links
+  unset DOTFILES_LINKS_FAIL_JOURNAL_ON
+
+  assert_file "${HOME}/.zshrc" || return 1
+  assert_contains "${HOME}/.zshrc" 'old zsh' || return 1
+  if [ -e "${backup_root}/.zshrc" ] || [ -L "${backup_root}/.zshrc" ]; then
+    fail "failed backup journal left moved user data in backup"
+    return 1
+  fi
+  if [ -L "${HOME}/.zshrc" ]; then
+    fail "failed backup journal replaced original destination with a symlink"
+  fi
+}
+
+test_links_apply_removes_created_symlink_when_link_journal_fails_after_ln() {
+  load_links || return 1
+  make_test_home
+  make_links_repo || return 1
+  write_file "${links_manifest}" 'zsh/zshrc.symlink|.zshrc'
+  backup_root="${TEST_TMPDIR}/backup root"
+  journal="${TEST_TMPDIR}/links journal"
+
+  DOTFILES_LINKS_FAIL_JOURNAL_ON="link"
+  export DOTFILES_LINKS_FAIL_JOURNAL_ON
+  assert_fails apply_links
+  unset DOTFILES_LINKS_FAIL_JOURNAL_ON
+
+  if [ -e "${HOME}/.zshrc" ] || [ -L "${HOME}/.zshrc" ]; then
+    fail "failed link journal left created symlink behind"
+    return 1
+  fi
+  links_rollback "${journal}" || return 1
+  if [ -e "${HOME}/.zshrc" ] || [ -L "${HOME}/.zshrc" ]; then
+    fail "rollback recreated unjournaled link"
+  fi
+}

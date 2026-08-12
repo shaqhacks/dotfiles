@@ -112,6 +112,11 @@ links_journal() {
   destination="$2"
   backup="$3"
 
+  if [ -n "${DOTFILES_LINKS_FAIL_JOURNAL_ON:-}" ] && [ "${DOTFILES_LINKS_FAIL_JOURNAL_ON}" = "${operation}" ]; then
+    error "injected journal failure for ${operation}"
+    return 1
+  fi
+
   reject_journal_field "${operation}" operation || return 1
   reject_journal_field "${destination}" destination || return 1
   reject_journal_field "${backup}" backup || return 1
@@ -165,12 +170,23 @@ links_apply_record() {
     backup_parent="$(dirname -- "${backup_path}")"
     links_record_mkdir "${backup_parent}" || return 1
     mv "${destination_absolute}" "${backup_path}" || return 1
-    links_journal backup "${destination_absolute}" "${backup_path}" || return 1
+    if ! links_journal backup "${destination_absolute}" "${backup_path}"; then
+      mv "${backup_path}" "${destination_absolute}" || return 1
+      return 1
+    fi
     links_maybe_fail_after_mutation || return 1
   fi
 
   ln -s "${source_absolute}" "${destination_absolute}" || return 1
-  links_journal link "${destination_absolute}" "${source_absolute}" || return 1
+  if ! links_journal link "${destination_absolute}" "${source_absolute}"; then
+    if [ -L "${destination_absolute}" ]; then
+      current_target="$(readlink "${destination_absolute}")" || return 1
+      if [ "${current_target}" = "${source_absolute}" ]; then
+        rm "${destination_absolute}" || return 1
+      fi
+    fi
+    return 1
+  fi
   links_maybe_fail_after_mutation
 }
 

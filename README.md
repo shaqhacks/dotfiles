@@ -79,6 +79,8 @@ The setup flow is:
 
 The rollback boundary is package installation. Package-manager changes are not rolled back by this repository. Link changes are journaled during the link phase and rolled back if a later link operation fails.
 
+On macOS, if Homebrew is missing, the pre-confirmation plan includes the official installer URL, `https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh`, and discloses that setup downloads it to a temporary file and executes that file after confirmation. Setup never pipes remote installer content into a shell.
+
 ## Usage
 
 Run a setup health check through the public entry point:
@@ -144,13 +146,13 @@ Plugin updates happen only when `manifest/plugins.conf` changes to a new pinned 
 When setup needs to replace an existing destination, it prints a backup root like:
 
 ```text
-backup root: $HOME/.local/share/dotfiles/backups/20260811123456.12345
+backup root: ${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles/backups/20260811123456.12345
 ```
 
 The backup directory preserves home-relative paths. To restore one backed-up file, remove the repository symlink and move the backup into place:
 
 ```bash
-backup_root="$HOME/.local/share/dotfiles/backups/20260811123456.12345"
+backup_root="${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles/backups/20260811123456.12345"
 rm "$HOME/.gitconfig"
 mv "$backup_root/.gitconfig" "$HOME/.gitconfig"
 ```
@@ -158,7 +160,7 @@ mv "$backup_root/.gitconfig" "$HOME/.gitconfig"
 Use the same pattern for nested files:
 
 ```bash
-backup_root="$HOME/.local/share/dotfiles/backups/20260811123456.12345"
+backup_root="${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles/backups/20260811123456.12345"
 rm "$HOME/.config/kitty/kitty.conf"
 mkdir -p "$HOME/.config/kitty"
 mv "$backup_root/.config/kitty/kitty.conf" "$HOME/.config/kitty/kitty.conf"

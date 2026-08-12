@@ -43,6 +43,18 @@ setup_data_root() {
   printf '%s/.local/share/dotfiles' "${HOME}"
 }
 
+setup_state_root() {
+  if [ -n "${XDG_STATE_HOME:-}" ]; then
+    printf '%s/dotfiles' "${XDG_STATE_HOME}"
+    return 0
+  fi
+  if [ -z "${HOME:-}" ]; then
+    error "HOME is required"
+    return 1
+  fi
+  printf '%s/.local/state/dotfiles' "${HOME}"
+}
+
 setup_plan_has() {
   phase="$1"
   action="$2"
@@ -58,7 +70,7 @@ setup_plan_has_link_changes() {
 }
 
 setup_backup_root() {
-  backup_parent="${SETUP_DATA_ROOT}/backups"
+  backup_parent="${SETUP_STATE_ROOT}/backups"
   backup_stamp="$(date +%Y%m%d%H%M%S)" || return 1
   printf '%s/%s.%s' "${backup_parent}" "${backup_stamp}" "$$"
 }
@@ -158,9 +170,7 @@ setup_plan_packages() {
     debian_plan_packages "${SETUP_ROOT}/manifest/packages.debian"
     ;;
   macos)
-    if ! macos_have_homebrew; then
-      plan_append packages install-homebrew "homebrew"
-    fi
+    macos_plan_homebrew || return "$?"
     macos_plan_packages "${SETUP_ROOT}/manifest/packages.macos"
     ;;
   *)
@@ -212,6 +222,7 @@ setup_apply_fonts() {
 setup_preflight() {
   SETUP_PLATFORM="$(detect_platform)" || return "$?"
   SETUP_DATA_ROOT="$(setup_data_root)" || return "$?"
+  SETUP_STATE_ROOT="$(setup_state_root)" || return "$?"
   if [ "${SETUP_SET_DEFAULT_SHELL}" = 1 ]; then
     SETUP_ZSH_PATH="$(platform_zsh_path "${SETUP_PLATFORM}")" || return "$?"
   else

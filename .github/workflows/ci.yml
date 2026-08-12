@@ -23,7 +23,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y shellcheck shfmt
+          sudo apt-get install -y zsh shellcheck shfmt
 
       - name: Install tools on macOS
         if: runner.os == 'macOS'
@@ -33,6 +33,12 @@ jobs:
 
       - name: Run shell tests
         run: bash tests/run.sh
+
+      - name: Check Bash syntax
+        run: bash -n setup.sh script/*.sh tests/*.sh
+
+      - name: Check Zsh syntax
+        run: zsh -n zsh/*.zsh zsh/zshrc.symlink system/*.zsh powerlevel10k/p10k.zsh
 
       - name: Run ShellCheck
         run: shellcheck -x setup.sh script/*.sh tests/*.sh

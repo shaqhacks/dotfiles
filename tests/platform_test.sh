@@ -220,18 +220,24 @@ test_macos_ensure_homebrew_downloads_temp_installer_and_removes_it_after_confirm
   macos_ensure_homebrew || return 1
 
   plan="$(plan_print)"
-  case "${plan}" in
-  *'https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh -> '*)
-    ;;
-  *)
-    fail "Homebrew installer source was not disclosed in plan"
-    return 1
-    ;;
-  esac
-  installer_path="${plan##* -> }"
-  assert_missing "${installer_path}" || return 1
+  assert_eq "" "${plan}" "Homebrew apply must not append post-confirm plan rows" || return 1
   assert_contains "${DOTFILES_STUB_LOG}" 'curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh -o ' || return 1
   assert_not_contains "${DOTFILES_STUB_LOG}" '|'
+}
+
+test_macos_plan_homebrew_discloses_official_url_and_temp_file_execution_strategy() {
+  load_platforms || return 1
+  setup_stubs || return 1
+  DOTFILES_STUB_BREW_ABSENT=1
+  export DOTFILES_STUB_BREW_ABSENT
+
+  plan_reset || return 1
+  macos_plan_homebrew || return 1
+
+  assert_contains "${DOTFILES_PLAN_FILE}" "$(printf 'packages\tinstall-homebrew\t')" || return 1
+  assert_contains "${DOTFILES_PLAN_FILE}" 'https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh' || return 1
+  assert_contains "${DOTFILES_PLAN_FILE}" 'download to a temporary file and execute after confirmation' || return 1
+  assert_not_contains "${DOTFILES_STUB_LOG}" 'curl '
 }
 
 test_macos_ensure_homebrew_propagates_download_failure_without_running_installer() {

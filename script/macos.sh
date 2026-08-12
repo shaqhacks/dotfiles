@@ -148,6 +148,16 @@ macos_plan_packages() {
   manifest_each macos "${manifest_path}" macos_plan_package_record
 }
 
+macos_plan_homebrew() {
+  if macos_have_homebrew; then
+    plan_append packages noop homebrew
+    return 0
+  fi
+
+  installer_url="https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh"
+  plan_append packages install-homebrew "${installer_url}; download to a temporary file and execute after confirmation"
+}
+
 macos_plan_contains() {
   detail="$1"
 
@@ -212,16 +222,11 @@ dotfiles_confirm_run() {
 
 macos_ensure_homebrew() {
   if macos_have_homebrew; then
-    plan_append packages noop homebrew
     return 0
   fi
 
   installer_url="https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh"
   installer_path="$(mktemp "${TMPDIR:-/tmp}/homebrew-install.XXXXXX")" || return 1
-  plan_append packages install-homebrew "${installer_url} -> ${installer_path}" || {
-    rm -f "${installer_path}"
-    return 1
-  }
 
   curl -fsSL "${installer_url}" -o "${installer_path}" || {
     rm -f "${installer_path}"

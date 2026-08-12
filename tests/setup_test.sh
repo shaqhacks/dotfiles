@@ -108,6 +108,15 @@ make_setup_plugin_checkout() {
   write_file "${XDG_DATA_HOME}/dotfiles/plugins/sample/sample.plugin.zsh" "plugin"
 }
 
+make_setup_plugin_checkout_at() {
+  data_root="$1"
+
+  mkdir -p "${data_root}/dotfiles/plugins/sample/.git" || return 1
+  write_file "${data_root}/dotfiles/plugins/sample/.git/origin" "https://example.invalid/sample.git" || return 1
+  write_file "${data_root}/dotfiles/plugins/sample/.git/commit" "2222222222222222222222222222222222222222" || return 1
+  write_file "${data_root}/dotfiles/plugins/sample/sample.plugin.zsh" "plugin"
+}
+
 run_setup_capture() {
   setup_out="${TEST_TMPDIR}/setup.out"
   setup_err="${TEST_TMPDIR}/setup.err"
@@ -291,6 +300,49 @@ test_setup_rolls_back_links_and_prints_backup_path_when_links_changed() {
   assert_contains "${HOME}/.zshrc" "old zsh" || return 1
   assert_missing "${HOME}/.gitconfig" || return 1
   assert_contains "${setup_err}" "backup root:"
+}
+
+test_setup_uses_xdg_state_home_for_link_backups() {
+  make_setup_repo || return 1
+  setup_environment || return 1
+  write_file "${HOME}/.zshrc" "old zsh" || return 1
+
+  run_setup_capture --skip-packages
+
+  assert_status 0 "${setup_status}" "state backup setup status" || return 1
+  assert_contains "${setup_err}" "backup root: ${XDG_STATE_HOME}/dotfiles/backups/" || return 1
+  assert_file "${XDG_STATE_HOME}/dotfiles/backups/"*"/.zshrc" || return 1
+  assert_missing "${XDG_DATA_HOME}/dotfiles/backups"
+}
+
+test_setup_macos_homebrew_plan_is_complete_before_confirmation() {
+  make_setup_repo || return 1
+  setup_environment || return 1
+  DOTFILES_TEST_PLATFORM=macos
+  DOTFILES_STUB_BREW_ABSENT=1
+  DOTFILES_STUB_BREW_FORMULAS='git'
+  DOTFILES_TEST_MACOS_ZSH_EXECUTABLE=1
+  XDG_DATA_HOME="${TEST_TMPDIR}/xdg data"
+  XDG_STATE_HOME="${TEST_TMPDIR}/xdg state"
+  export DOTFILES_TEST_PLATFORM DOTFILES_STUB_BREW_ABSENT DOTFILES_STUB_BREW_FORMULAS DOTFILES_TEST_MACOS_ZSH_EXECUTABLE
+  export XDG_DATA_HOME XDG_STATE_HOME
+  write_file "${DOTFILES_TEST_SHELLS_FILE}" "/bin/zsh" || return 1
+  mkdir -p "${XDG_DATA_HOME}/fonts/JetBrainsMonoNerdFont" || return 1
+  write_file "${XDG_DATA_HOME}/fonts/JetBrainsMonoNerdFont/JetBrainsMonoNerdFont-Regular.ttf" "font" || return 1
+  write_file "${XDG_DATA_HOME}/fonts/JetBrainsMonoNerdFont/.version" "v3.5.0" || return 1
+  make_setup_plugin_checkout_at "${XDG_DATA_HOME}" || return 1
+
+  run_setup_capture --dry-run
+  assert_status 0 "${setup_status}" "macOS dry-run status" || return 1
+  assert_contains "${setup_out}" 'https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh' || return 1
+  assert_contains "${setup_out}" 'download to a temporary file and execute after confirmation' || return 1
+
+  : >"${DOTFILES_PHASE_LOG}" || return 1
+  run_setup_capture
+  assert_status 0 "${setup_status}" "macOS setup status" || return 1
+  assert_log_count 'curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh -o ' 1 || return 1
+  install_homebrew_rows="$(grep -F -c -- "$(printf 'packages\tinstall-homebrew\t')" "${setup_out}" 2>/dev/null || true)"
+  assert_eq "1" "${install_homebrew_rows}" "single pre-confirm Homebrew plan row"
 }
 
 test_setup_set_default_shell_uses_validated_zsh_and_propagates_chsh_failure() {
