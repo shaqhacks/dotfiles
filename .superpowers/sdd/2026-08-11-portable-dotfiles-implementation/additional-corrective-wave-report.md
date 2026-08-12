@@ -85,7 +85,7 @@ All five commands exited 0 with no diagnostics or formatting/whitespace diff.
 
 ## Commit
 
-`cfc7531`
+Implementation commit: `21493b5`
 
 ## Concerns
 
