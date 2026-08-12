@@ -88,8 +88,8 @@ test_links_manifest_declares_application_topic_mappings() {
   manifest_each links "${links_manifest}" collect_config_record || return 1
 
   expected="$(printf '%s\n' \
+    "zsh/zshrc.symlink .zshrc" \
     "git/gitconfig.symlink .gitconfig" \
-    "git/gitconfig.local.example .gitconfig.local.example" \
     "kitty/kitty.conf .config/kitty/kitty.conf" \
     "powerlevel10k/p10k.zsh .p10k.zsh")"
   assert_eq "${expected}" "$(cat "${TEST_TMPDIR}/callback-output")" "application link records"
@@ -105,8 +105,8 @@ test_links_manifest_plans_first_installation_for_application_topics() {
   links_plan "${repo_root}" "${links_manifest}" || return 1
 
   expected="$(printf '%s\n' \
+    "$(printf 'links\tlink\t.zshrc')" \
     "$(printf 'links\tlink\t.gitconfig')" \
-    "$(printf 'links\tlink\t.gitconfig.local.example')" \
     "$(printf 'links\tmkdir\t.config/kitty/kitty.conf')" \
     "$(printf 'links\tlink\t.config/kitty/kitty.conf')" \
     "$(printf 'links\tlink\t.p10k.zsh')")"

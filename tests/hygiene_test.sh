@@ -88,7 +88,8 @@ test_hygiene_rejects_private_paths_identity_secrets_placeholders_and_insecure_ur
   hygiene_grep_filtered '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}' '@example\.com' "private identity fields are not allowed" || return 1
   hygiene_grep_filtered '[A-Za-z0-9.-]+\.(local|internal|corp|lan|home|company|employer)\b' '(\.zshrc\.local|\.gitconfig\.local|gitconfig\.local\.example)' "private domains are not allowed" || return 1
   hygiene_grep '((AKIA|ASIA)[A-Z0-9]{16}|gh[pousr]_[A-Za-z0-9_]{36,}|xox[baprs]-[A-Za-z0-9-]{10,}|-----BEGIN (RSA |OPENSSH |EC |DSA )?PRIVATE KEY-----)' "common secret formats are not allowed" || return 1
-  hygiene_grep '(TODO|FIXME|TBD|REPLACE_ME|YOUR_|CHANGEME|\{\{[^}]+\}\}|<[^>]*(TODO|FIXME|REPLACE|YOUR|CHANGEME)[^>]*>)' "unresolved template markers are not allowed" || return 1
+  hygiene_grep '(TODO|FIXME|TBD|REPLACE_ME|YOUR_|CHANGEME|<[^>]*(TODO|FIXME|REPLACE|YOUR|CHANGEME)[^>]*>)' "unresolved template markers are not allowed" || return 1
+  hygiene_grep_filtered '\{\{[^}]+\}\}' '\$\{\{' "unresolved template markers are not allowed" || return 1
   hygiene_grep '(^|[^A-Za-z])((git|ssh)://|http://|git@)' "non-HTTPS remote URLs are not allowed"
 }
 

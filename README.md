@@ -73,7 +73,7 @@ The setup flow is:
 5. Apply package changes unless `--skip-packages` was provided.
 6. Clone or update pinned plugins.
 7. Install the Nerd Font on Debian/Ubuntu when missing.
-8. Back up conflicting link destinations and create symlinks for `.gitconfig`, `.gitconfig.local.example`, `.config/kitty/kitty.conf`, and `.p10k.zsh`.
+8. Back up conflicting link destinations and create symlinks for `.zshrc`, `.gitconfig`, `.config/kitty/kitty.conf`, and `.p10k.zsh`.
 9. Change the login shell only with `--set-default-shell`.
 10. Run doctor checks.
 
@@ -116,12 +116,12 @@ git diff --check
 
 Use local override files for values that should not be committed.
 
-For Zsh, create `$HOME/.zshrc.local` when using `zsh/zshrc.symlink` as the active Zsh startup file. It is sourced after zsh-autosuggestions and before zsh-syntax-highlighting, so local aliases, exports, and prompt tweaks can live there. The current link manifest does not replace `$HOME/.zshrc`.
+For Zsh, create `$HOME/.zshrc.local` for local aliases, exports, and prompt tweaks. It is sourced after zsh-autosuggestions and before zsh-syntax-highlighting.
 
 For Git identity, start from the example file:
 
 ```bash
-cp "$HOME/.gitconfig.local.example" "$HOME/.gitconfig.local"
+cp "$HOME/.dotfiles/git/gitconfig.local.example" "$HOME/.gitconfig.local"
 ```
 
 Then edit `$HOME/.gitconfig.local` with local identity, signing, credential, and editor settings. The tracked `.gitconfig` includes this local file.
@@ -168,7 +168,7 @@ To uninstall repository-managed links without restoring backups:
 
 ```bash
 rm "$HOME/.gitconfig"
-rm "$HOME/.gitconfig.local.example"
+rm "$HOME/.zshrc"
 rm "$HOME/.config/kitty/kitty.conf"
 rm "$HOME/.p10k.zsh"
 ```
