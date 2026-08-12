@@ -7,13 +7,36 @@ contains_line() {
   printf '%s\n' "${list}" | grep -F -x -- "${needle}" >/dev/null 2>&1
 }
 
+status_for_package() {
+  list="$1"
+  needle="$2"
+
+  printf '%s\n' "${list}" |
+    while IFS= read -r record; do
+      case "${record}" in
+        "${needle}|"*)
+          printf '%s\n' "${record#*|}"
+          exit 0
+          ;;
+      esac
+    done
+}
+
 printf 'dpkg-query %s\n' "$*" >>"${DOTFILES_STUB_LOG}"
 
 package=""
 for arg in "$@"; do
   package="${arg}"
 done
+
+status="$(status_for_package "${DOTFILES_STUB_DPKG_STATUSES:-}" "${package}")"
+if [ -n "${status}" ]; then
+  printf '%s\n' "${status}"
+  exit 0
+fi
+
 if contains_line "${DOTFILES_STUB_DPKG_PACKAGES:-}" "${package}"; then
+  printf '%s\n' 'install ok installed'
   exit 0
 fi
 

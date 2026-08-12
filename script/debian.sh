@@ -3,7 +3,8 @@
 debian_package_installed() {
   package_name="$1"
 
-  dpkg-query -W -f='${Status}' "${package_name}" >/dev/null 2>&1
+  package_status="$(dpkg-query -W -f='${Status}' "${package_name}" 2>/dev/null)" || return 1
+  [ "${package_status}" = "install ok installed" ]
 }
 
 debian_plan_package_record() {

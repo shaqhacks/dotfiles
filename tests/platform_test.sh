@@ -261,6 +261,20 @@ test_debian_plan_packages_appends_only_missing_packages() {
   assert_eq "$(printf 'packages\tinstall\tapt zsh\npackages\tinstall\tapt curl')" "$(plan_print)" "Debian package plan"
 }
 
+test_debian_plan_packages_requires_exact_installed_status() {
+  load_platforms || return 1
+  setup_stubs || return 1
+  manifest="${TEST_TMPDIR}/packages.debian"
+  write_file "${manifest}" 'git'
+  DOTFILES_STUB_DPKG_STATUSES="$(printf 'git|deinstall ok config-files')"
+  export DOTFILES_STUB_DPKG_STATUSES
+
+  plan_reset || return 1
+  debian_plan_packages "${manifest}" || return 1
+
+  assert_eq "$(printf 'packages\tinstall\tapt git')" "$(plan_print)" "non-installed dpkg status is planned"
+}
+
 test_debian_install_packages_runs_apt_update_once_and_installs_only_planned_packages() {
   load_platforms || return 1
   setup_stubs || return 1
