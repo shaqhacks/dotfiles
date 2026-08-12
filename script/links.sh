@@ -147,7 +147,10 @@ links_record_mkdir() {
     links_record_mkdir "${mkdir_parent}" || return 1
   fi
   mkdir "${mkdir_path}" || return 1
-  links_journal mkdir "${mkdir_path}" "" || return 1
+  if ! links_journal mkdir "${mkdir_path}" ""; then
+    rmdir "${mkdir_path}" || return 1
+    return 1
+  fi
   links_maybe_fail_after_mutation
 }
 

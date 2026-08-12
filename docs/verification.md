@@ -8,11 +8,12 @@ Platform: macOS shell environment with repository test fixtures for package-mana
 
 | Command | Exit status | Result |
 | --- | ---: | --- |
-| `bash tests/run.sh` | 0 | TAP suite reported `98 passed, 0 failed`. |
+| `bash tests/run.sh` | 0 | TAP suite reported `104 passed, 0 failed`. |
 | `shellcheck -x setup.sh script/*.sh tests/*.sh` | 0 | No ShellCheck diagnostics. |
 | `shfmt -d setup.sh script tests` | 0 | No formatting diff. |
 | `git diff --check` | 0 | No whitespace errors. |
 | `bash tests/run.sh setup links platform` | 0 | Existing isolated setup/link/platform scenario suites reported `39 passed, 0 failed`. |
+| `bash tests/run.sh links` | 0 | Link suite reported `14 passed, 0 failed`. |
 | `bash tests/run.sh hygiene` | 0 | Repository policy scan reported `4 passed, 0 failed`. |
 | `bash -n setup.sh script/*.sh tests/*.sh` | 0 | Bash syntax check passed. |
 | `./setup.sh --help` | 0 | Help output lists `--dry-run`, `--skip-packages`, `--set-default-shell`, and `--help`. |

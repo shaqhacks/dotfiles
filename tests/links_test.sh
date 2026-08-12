@@ -307,3 +307,26 @@ test_links_apply_removes_created_symlink_when_link_journal_fails_after_ln() {
     fail "rollback recreated unjournaled link"
   fi
 }
+
+test_links_apply_removes_created_directory_when_mkdir_journal_fails() {
+  load_links || return 1
+  make_test_home
+  make_links_repo || return 1
+  write_file "${links_manifest}" 'git/gitconfig.symlink|.dotfiles-test/config'
+  backup_root="${TEST_TMPDIR}/backup root"
+  journal="${TEST_TMPDIR}/links journal"
+
+  DOTFILES_LINKS_FAIL_JOURNAL_ON="mkdir"
+  export DOTFILES_LINKS_FAIL_JOURNAL_ON
+  assert_fails apply_links
+  unset DOTFILES_LINKS_FAIL_JOURNAL_ON
+
+  if [ -e "${HOME}/.dotfiles-test" ] || [ -L "${HOME}/.dotfiles-test" ]; then
+    fail "failed mkdir journal left created directory behind"
+    return 1
+  fi
+  links_rollback "${journal}" || return 1
+  if [ -e "${HOME}/.dotfiles-test" ] || [ -L "${HOME}/.dotfiles-test" ]; then
+    fail "rollback recreated unjournaled directory"
+  fi
+}

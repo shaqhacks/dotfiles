@@ -1,7 +1,7 @@
 # Final Review Fix Report
 
 Date: 2026-08-11
-Worktree: `/Users/shaquillejohnson/code/dotfiles/.worktrees/portable-dotfiles`
+Worktree: `portable-dotfiles`
 Base: `43735c6d356ada1ffb8979c04f854e631656c28d`
 
 ## Scope
