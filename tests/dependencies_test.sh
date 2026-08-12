@@ -311,6 +311,20 @@ test_plugins_apply_removes_temp_clone_after_term_signal() {
   fi
 }
 
+test_plugins_apply_preserves_outer_term_trap_after_successful_clone() {
+  load_dependencies || return 1
+  setup_dependency_stubs || return 1
+  manifest="$(plugin_manifest)"
+  data_root="${TEST_TMPDIR}/data"
+  trap 'printf term >"${TEST_TMPDIR}/outer-term-trap"' TERM
+  before_trap="$(trap -p TERM)"
+
+  plugins_apply "${manifest}" "${data_root}" || return 1
+
+  after_trap="$(trap -p TERM)"
+  assert_eq "${before_trap}" "${after_trap}" "outer TERM trap after plugin clone"
+}
+
 test_plugins_plan_rejects_manifest_with_malformed_entrypoint() {
   load_dependencies || return 1
   setup_dependency_stubs || return 1
