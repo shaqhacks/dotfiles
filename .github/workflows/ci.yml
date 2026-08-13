@@ -11,9 +11,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os:
-          - ubuntu-latest
-          - macos-latest
+        include:
+          - os: ubuntu-latest
+            shfmt_asset: shfmt_v3.13.1_linux_amd64
+            shfmt_sha256: fb096c5d1ac6beabbdbaa2874d025badb03ee07929f0c9ff67563ce8c75398b1
+          - os: macos-latest
+            shfmt_asset: shfmt_v3.13.1_darwin_arm64
+            shfmt_sha256: 9680526be4a66ea1ffe988ed08af58e1400fe1e4f4aef5bd88b20bb9b3da33f8
 
     steps:
       - name: Check out repository
@@ -34,9 +38,19 @@ jobs:
       - name: Install pinned shfmt
         env:
           SHFMT_VERSION: v3.13.1
+          SHFMT_ASSET: ${{ matrix.shfmt_asset }}
+          SHFMT_SHA256: ${{ matrix.shfmt_sha256 }}
         run: |
           mkdir -p "${RUNNER_TEMP}/bin"
-          GOBIN="${RUNNER_TEMP}/bin" go install "mvdan.cc/sh/v3/cmd/shfmt@${SHFMT_VERSION}"
+          curl -fsSLo "${RUNNER_TEMP}/bin/shfmt" \
+            "https://github.com/mvdan/sh/releases/download/${SHFMT_VERSION}/${SHFMT_ASSET}"
+          if command -v sha256sum >/dev/null 2>&1; then
+            printf '%s  %s\n' "${SHFMT_SHA256}" "${RUNNER_TEMP}/bin/shfmt" | sha256sum -c -
+          else
+            printf '%s  %s\n' "${SHFMT_SHA256}" "${RUNNER_TEMP}/bin/shfmt" | shasum -a 256 -c -
+          fi
+          chmod +x "${RUNNER_TEMP}/bin/shfmt"
+          "${RUNNER_TEMP}/bin/shfmt" --version
           echo "${RUNNER_TEMP}/bin" >> "${GITHUB_PATH}"
 
       - name: Run shell tests
