@@ -330,3 +330,76 @@ test_links_apply_removes_created_directory_when_mkdir_journal_fails() {
     fail "rollback recreated unjournaled directory"
   fi
 }
+
+test_links_plan_rejects_unwritable_destination_parent_before_mutation() {
+  load_links || return 1
+  make_test_home
+  make_links_repo || return 1
+  write_file "${links_manifest}" 'kitty configs/kitty.conf|.config/kitty/kitty.conf'
+  mkdir -p "${HOME}/.config/kitty" || return 1
+  : >"${HOME}/.config/kitty/kitty.conf" || return 1
+  chmod 555 "${HOME}/.config/kitty" || return 1
+
+  plan_reset || return 1
+  assert_fails links_plan "${repo_root}" "${links_manifest}"
+  chmod 755 "${HOME}/.config/kitty" || return 1
+
+  if [ -L "${HOME}/.config/kitty/kitty.conf" ]; then
+    fail "links_plan mutated an unwritable destination"
+  fi
+}
+
+test_links_plan_rejects_unwritable_missing_ancestor_before_mutation() {
+  load_links || return 1
+  make_test_home
+  make_links_repo || return 1
+  write_file "${links_manifest}" 'kitty configs/kitty.conf|.config/kitty/kitty.conf'
+  mkdir -p "${HOME}/.config" || return 1
+  chmod 555 "${HOME}/.config" || return 1
+
+  plan_reset || return 1
+  assert_fails links_plan "${repo_root}" "${links_manifest}"
+  chmod 755 "${HOME}/.config" || return 1
+
+  if [ -e "${HOME}/.config/kitty" ]; then
+    fail "links_plan created a directory under an unwritable ancestor"
+  fi
+}
+
+test_links_apply_preflight_rejects_unwritable_parent_without_touching_earlier_links() {
+  load_links || return 1
+  make_test_home
+  make_links_repo || return 1
+  write_file "${links_manifest}" \
+    'zsh/zshrc.symlink|.zshrc' \
+    'kitty configs/kitty.conf|.config/kitty/kitty.conf'
+  printf 'existing zshrc\n' >"${HOME}/.zshrc" || return 1
+  mkdir -p "${HOME}/.config/kitty" || return 1
+  : >"${HOME}/.config/kitty/kitty.conf" || return 1
+  chmod 555 "${HOME}/.config/kitty" || return 1
+
+  assert_fails apply_links
+  chmod 755 "${HOME}/.config/kitty" || return 1
+
+  if [ -L "${HOME}/.zshrc" ]; then
+    fail "preflight failure still linked an earlier record"
+    return 1
+  fi
+  assert_eq "existing zshrc" "$(cat "${HOME}/.zshrc")" "untouched earlier destination"
+}
+
+test_links_plan_reports_noop_for_correct_link_under_unwritable_parent() {
+  load_links || return 1
+  make_test_home
+  make_links_repo || return 1
+  write_file "${links_manifest}" 'kitty configs/kitty.conf|.config/kitty/kitty.conf'
+  mkdir -p "${HOME}/.config/kitty" || return 1
+  ln -s "$(source_path 'kitty configs/kitty.conf')" "${HOME}/.config/kitty/kitty.conf" || return 1
+  chmod 555 "${HOME}/.config/kitty" || return 1
+
+  plan_reset || return 1
+  links_plan "${repo_root}" "${links_manifest}" || return 1
+  chmod 755 "${HOME}/.config/kitty" || return 1
+
+  assert_eq "$(printf 'links\tnoop\t.config/kitty/kitty.conf')" "$(plan_print)" "noop plan under unwritable parent"
+}

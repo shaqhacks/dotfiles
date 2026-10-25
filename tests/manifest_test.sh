@@ -204,13 +204,13 @@ test_locked_manifests_parse_to_expected_records() {
 
   : >"${TEST_TMPDIR}/callback-output"
   manifest_each macos "${repo_root}/manifest/packages.macos" collect_callback || return 1
-  assert_eq "$(printf 'formula git\nformula fzf\nformula coreutils\nformula shellcheck\nformula shfmt\ncask kitty\ncask font-jetbrains-mono-nerd-font')" "$(cat "${TEST_TMPDIR}/callback-output")" "macOS packages"
+  assert_eq "$(printf 'formula git\nformula git-delta\nformula fzf\nformula coreutils\nformula shellcheck\nformula shfmt\ncask kitty\ncask font-jetbrains-mono-nerd-font')" "$(cat "${TEST_TMPDIR}/callback-output")" "macOS packages"
 
   : >"${TEST_TMPDIR}/callback-output"
   manifest_each debian "${repo_root}/manifest/packages.debian" collect_callback || return 1
-  assert_eq "$(printf 'zsh\ngit\ncurl\nfzf\nkitty\nfontconfig\nunzip\ncoreutils\nshellcheck\nshfmt')" "$(cat "${TEST_TMPDIR}/callback-output")" "Debian packages"
+  assert_eq "$(printf 'zsh\ngit\ngit-delta\ncurl\nfzf\nkitty\nfontconfig\nunzip\ncoreutils\nshellcheck\nshfmt')" "$(cat "${TEST_TMPDIR}/callback-output")" "Debian packages"
 
   : >"${TEST_TMPDIR}/callback-output"
   manifest_each plugins "${repo_root}/manifest/plugins.conf" collect_callback || return 1
-  assert_eq "$(printf 'powerlevel10k https://github.com/romkatv/powerlevel10k.git 35833ea15f14b71dbcebc7e54c104d8d56ca5268 powerlevel10k.zsh-theme\nzsh-autosuggestions https://github.com/zsh-users/zsh-autosuggestions.git e52ee8ca55bcc56a17c828767a3f98f22a68d4eb zsh-autosuggestions.zsh\nzsh-syntax-highlighting https://github.com/zsh-users/zsh-syntax-highlighting.git db085e4661f6aafd24e5acb5b2e17e4dd5dddf3e zsh-syntax-highlighting.zsh')" "$(cat "${TEST_TMPDIR}/callback-output")" "plugins"
+  assert_eq "$(printf 'powerlevel10k https://github.com/romkatv/powerlevel10k.git 35833ea15f14b71dbcebc7e54c104d8d56ca5268 powerlevel10k.zsh-theme\nzsh-autosuggestions https://github.com/zsh-users/zsh-autosuggestions.git e52ee8ca55bcc56a17c828767a3f98f22a68d4eb zsh-autosuggestions.zsh\nzsh-syntax-highlighting https://github.com/zsh-users/zsh-syntax-highlighting.git db085e4661f6aafd24e5acb5b2e17e4dd5dddf3e zsh-syntax-highlighting.zsh\nnerdtree https://github.com/preservim/nerdtree.git 9b465acb2745beb988eff3c1e4aa75f349738230 plugin/NERD_tree.vim')" "$(cat "${TEST_TMPDIR}/callback-output")" "plugins"
 }
