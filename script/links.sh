@@ -30,6 +30,27 @@ links_parent_missing() {
   printf '%s' "${parent_path}"
 }
 
+links_usable_ancestor() {
+  destination_path="$1"
+
+  probe="$(dirname -- "${destination_path}")"
+  while [ ! -e "${probe}" ]; do
+    next_probe="$(dirname -- "${probe}")"
+    if [ "${next_probe}" = "${probe}" ]; then
+      break
+    fi
+    probe="${next_probe}"
+  done
+  if [ ! -d "${probe}" ]; then
+    error "destination parent is not a directory: ${probe}"
+    return 1
+  fi
+  if [ ! -w "${probe}" ]; then
+    error "destination parent is not writable: ${probe}"
+    return 1
+  fi
+}
+
 links_plan_record() {
   relative_source="$1"
   relative_destination="$2"
@@ -45,6 +66,8 @@ links_plan_record() {
       return 0
     fi
   fi
+
+  links_usable_ancestor "${destination_absolute}" || return 1
 
   parent_missing="$(links_parent_missing "${destination_absolute}")"
   if [ -n "${parent_missing}" ]; then
@@ -91,18 +114,7 @@ links_append_preflight_record() {
     return 1
   fi
 
-  probe="${parent_path}"
-  while [ ! -e "${probe}" ]; do
-    next_probe="$(dirname -- "${probe}")"
-    if [ "${next_probe}" = "${probe}" ]; then
-      break
-    fi
-    probe="${next_probe}"
-  done
-  if [ ! -d "${probe}" ]; then
-    error "destination parent is not a directory: ${parent_path}"
-    return 1
-  fi
+  links_usable_ancestor "${destination_absolute}" || return 1
 
   printf 'link\t%s\t%s\t%s\t%s\n' "${source_absolute}" "${destination_absolute}" "${backup_path}" "${parent_path}" >>"${LINKS_PREFLIGHT_FILE}"
 }

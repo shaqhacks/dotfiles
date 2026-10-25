@@ -10,3 +10,4 @@
 /.gitconfig.local
 /.zshrc.local
 tmp/
+.serena/

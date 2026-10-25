@@ -2,6 +2,7 @@
 # formula|name
 # cask|name
 formula|git
+formula|git-delta
 formula|fzf
 formula|coreutils
 formula|shellcheck

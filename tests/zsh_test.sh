@@ -49,6 +49,22 @@ write_plugin_marker() {
   printf '%s\n' "print -r -- ${marker} >> \"\${DOTFILES_ZSH_LOAD_TRACE}\"" >"${plugin_dir}/${entrypoint}"
 }
 
+write_stub_command() {
+  # zsh/path.zsh rebuilds PATH with "${HOME}/.local/bin" first, ahead of
+  # /opt/homebrew/bin. Stubs must live there or a real Homebrew binary of the
+  # same name shadows them once path.zsh runs.
+  command_name="$1"
+  shift
+
+  stub_bin="${HOME}/.local/bin"
+  mkdir -p "${stub_bin}" || return 1
+  : >"${stub_bin}/${command_name}" || return 1
+  for line in "$@"; do
+    printf '%s\n' "${line}" >>"${stub_bin}/${command_name}" || return 1
+  done
+  chmod +x "${stub_bin}/${command_name}"
+}
+
 run_login_zsh() {
   DOTFILES_ZSH_LOAD_TRACE="${TEST_TMPDIR}/load-trace"
   export DOTFILES_ZSH_LOAD_TRACE
@@ -75,6 +91,7 @@ test_zsh_fragments_parse_with_zsh() {
     "${repo}/zsh/completion.zsh" \
     "${repo}/zsh/zshrc.symlink" \
     "${repo}/system/aliases.zsh" \
+    "${repo}/system/extra-aliases.zsh" \
     "${repo}/system/colors.zsh"
 }
 
@@ -104,6 +121,7 @@ test_zsh_load_order_keeps_syntax_highlighting_last_after_local_override() {
     path \
     config \
     aliases \
+    extra-aliases \
     colors \
     keybindings \
     completion \
@@ -171,31 +189,26 @@ test_zsh_completion_uses_xdg_cache_location() {
 
 test_zsh_fzf_uses_modern_zsh_integration_when_available() {
   prepare_zsh_home || return 1
-  fake_bin="${TEST_TMPDIR}/fake-bin"
-  mkdir -p "${fake_bin}" || return 1
-  printf '%s\n' \
+  write_stub_command fzf \
     '#!/usr/bin/env bash' \
     'if [ "$1" = "--zsh" ]; then' \
     '  printf "%s\n" "print -r -- fzf-modern >> \"\${DOTFILES_ZSH_LOAD_TRACE}\""' \
-    'fi' >"${fake_bin}/fzf"
-  chmod +x "${fake_bin}/fzf"
+    'fi' || return 1
 
-  PATH="${fake_bin}:${PATH}" run_login_zsh ':' >/dev/null || return 1
+  run_login_zsh ':' >/dev/null || return 1
   assert_contains "${DOTFILES_ZSH_LOAD_TRACE}" "fzf-modern"
 }
 
 test_zsh_fzf_uses_distro_fallback_files_without_modern_output() {
   prepare_zsh_home || return 1
-  fake_bin="${TEST_TMPDIR}/fake-bin"
   fallback_root="${TEST_TMPDIR}/fzf distro"
-  mkdir -p "${fake_bin}" "${fallback_root}" || return 1
-  printf '%s\n' '#!/usr/bin/env bash' 'exit 0' >"${fake_bin}/fzf"
-  chmod +x "${fake_bin}/fzf"
+  mkdir -p "${fallback_root}" || return 1
+  write_stub_command fzf '#!/usr/bin/env bash' 'exit 0' || return 1
   printf '%s\n' 'print -r -- fzf-fallback >> "${DOTFILES_ZSH_LOAD_TRACE}"' >"${fallback_root}/key-bindings.zsh"
 
   DOTFILES_FZF_ZSH_FALLBACKS="${fallback_root}/key-bindings.zsh"
   export DOTFILES_FZF_ZSH_FALLBACKS
-  PATH="${fake_bin}:${PATH}" run_login_zsh ':' >/dev/null || return 1
+  run_login_zsh ':' >/dev/null || return 1
   assert_contains "${DOTFILES_ZSH_LOAD_TRACE}" "fzf-fallback"
 }
 

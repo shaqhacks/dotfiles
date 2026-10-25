@@ -91,7 +91,8 @@ test_links_manifest_declares_application_topic_mappings() {
     "zsh/zshrc.symlink .zshrc" \
     "git/gitconfig.symlink .gitconfig" \
     "kitty/kitty.conf .config/kitty/kitty.conf" \
-    "powerlevel10k/p10k.zsh .p10k.zsh")"
+    "powerlevel10k/p10k.zsh .p10k.zsh" \
+    "vim/vimrc.symlink .vimrc")"
   assert_eq "${expected}" "$(cat "${TEST_TMPDIR}/callback-output")" "application link records"
 }
 
@@ -109,6 +110,7 @@ test_links_manifest_plans_first_installation_for_application_topics() {
     "$(printf 'links\tlink\t.gitconfig')" \
     "$(printf 'links\tmkdir\t.config/kitty/kitty.conf')" \
     "$(printf 'links\tlink\t.config/kitty/kitty.conf')" \
-    "$(printf 'links\tlink\t.p10k.zsh')")"
+    "$(printf 'links\tlink\t.p10k.zsh')" \
+    "$(printf 'links\tlink\t.vimrc')")"
   assert_eq "${expected}" "$(plan_print)" "first install link plan"
 }

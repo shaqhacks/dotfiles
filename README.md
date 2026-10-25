@@ -73,7 +73,7 @@ The setup flow is:
 5. Apply package changes unless `--skip-packages` was provided.
 6. Clone or update pinned plugins.
 7. Install the Nerd Font on Debian/Ubuntu when missing.
-8. Back up conflicting link destinations and create symlinks for `.zshrc`, `.gitconfig`, `.config/kitty/kitty.conf`, and `.p10k.zsh`.
+8. Back up conflicting link destinations and create symlinks for `.zshrc`, `.gitconfig`, `.config/kitty/kitty.conf`, `.p10k.zsh`, and `.vimrc`.
 9. Change the login shell only with `--set-default-shell`.
 10. Run doctor checks.
 
@@ -173,6 +173,7 @@ rm "$HOME/.gitconfig"
 rm "$HOME/.zshrc"
 rm "$HOME/.config/kitty/kitty.conf"
 rm "$HOME/.p10k.zsh"
+rm "$HOME/.vimrc"
 ```
 
 Optional cleanup for cloned plugins and local font files:

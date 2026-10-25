@@ -1,0 +1,34 @@
+" Mouse: click to move the cursor, drag to select, wheel to scroll, in every mode.
+set mouse=a
+if !has('nvim')
+  " sgr handles terminals wider than 223 columns (kitty included).
+  set ttymouse=sgr
+endif
+
+" Plugins are pinned in manifest/plugins.conf and checked out by setup.sh.
+let s:plugin_root = (empty($XDG_DATA_HOME) ? $HOME . '/.local/share' : $XDG_DATA_HOME) . '/dotfiles/plugins'
+if isdirectory(s:plugin_root . '/nerdtree')
+  execute 'set runtimepath+=' . fnameescape(s:plugin_root . '/nerdtree')
+endif
+
+" Hybrid line numbers: absolute number on the cursor line, relative distance elsewhere.
+set number
+set relativenumber
+
+" Open NERDTree on startup and put the cursor back in the file. `vim dir` already
+" opens NERDTree in place of the directory listing, so skip that case.
+augroup dotfiles_nerdtree
+  autocmd!
+  autocmd StdinReadPre * let s:std_in = 1
+  autocmd VimEnter * if exists(':NERDTree') && !exists('s:std_in')
+        \ && !(argc() == 1 && isdirectory(argv()[0])) | NERDTree | wincmd p | endif
+  " Quit Vim when NERDTree is the only window left.
+  autocmd BufEnter * if winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isTabTree()
+        \ | quit | endif
+augroup END
+
+" File browsing: Ctrl-n toggles NERDTree, Ctrl-f reveals the current file in it.
+let g:NERDTreeShowHidden = 1
+let g:NERDTreeMouseMode = 2  " single-click opens folders, double-click opens files
+nnoremap <silent> <C-n> :NERDTreeToggle<CR>
+nnoremap <silent> <C-f> :NERDTreeFind<CR>

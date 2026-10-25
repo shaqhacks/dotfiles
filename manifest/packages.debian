@@ -2,6 +2,7 @@
 # name
 zsh
 git
+git-delta
 curl
 fzf
 kitty

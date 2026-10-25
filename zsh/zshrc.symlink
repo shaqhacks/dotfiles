@@ -28,12 +28,21 @@ source "${DOTFILES_REPO}/zsh/config.zsh"
 dotfiles_trace config
 source "${DOTFILES_REPO}/system/aliases.zsh"
 dotfiles_trace aliases
+source "${DOTFILES_REPO}/system/extra-aliases.zsh"
+dotfiles_trace extra-aliases
 source "${DOTFILES_REPO}/system/colors.zsh"
 dotfiles_trace colors
 source "${DOTFILES_REPO}/zsh/keybindings.zsh"
 dotfiles_trace keybindings
 source "${DOTFILES_REPO}/zsh/completion.zsh"
 dotfiles_trace completion
+
+export NVM_DIR="${HOME}/.nvm"
+dotfiles_source_if_present "${NVM_DIR}/nvm.sh"
+dotfiles_source_if_present "${NVM_DIR}/bash_completion"
+if (( ${+commands[uv]} )); then
+  eval "$(uv generate-shell-completion zsh)"
+fi
 
 dotfiles_source_if_present "${DOTFILES_PLUGIN_ROOT}/powerlevel10k/powerlevel10k.zsh-theme"
 dotfiles_source_if_present "${DOTFILES_REPO}/powerlevel10k/p10k.zsh"
